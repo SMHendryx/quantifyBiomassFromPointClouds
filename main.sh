@@ -11,6 +11,8 @@ Rscript run_tileR.R
 
 # Classify ground points:
 ./run_MCC_Lidar.sh
+# if mcc lidar doesn't run, classify ground points with PMF in lidR:
+#Here: write bash script to cp all original tiles that were not MCC-Lidared into new directory called "notSuccessfullyGroundClassifedByMCC"
 
 # Merge now-classified tiles back together:
 mergeTiles.R

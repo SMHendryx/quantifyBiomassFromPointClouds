@@ -33,8 +33,7 @@ library(feather)
 source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/assignPointsToClusters.R")
 
 
-# Run test:
-
+# Run:
 setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
 
 # read in clustered point cloud:

@@ -1,9 +1,10 @@
 # Pipeline to quantify biomass from point clouds
 # First argument should be input point cloud, second argument should be training data
 # Script should be run in a directory within which processed files and directories will be created.
+# File paths currently hardcoded inside scripts
+
 
 # First, decimate the point cloud if very dense:
-# File paths currently hardcoded inside scripts
 Rscript decimate_PointClouds.R
 
 # Then tile the point cloud:
@@ -16,6 +17,9 @@ Rscript run_tileR.R
 
 # Merge now-classified tiles back together:
 mergeTiles.R
+
+# Cluster points, via watershed, OPTICS, etc.:
+
 
 # set up training and validation data:
 Rscript assignPointsToClusters.R

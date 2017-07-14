@@ -30,19 +30,24 @@ startTime = Sys.time()
 library(data.table)
 library(ggplot2)
 library(feather)
-source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/assignPointsToClusters.R")
+library(lidR)
+source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/R/assignPointsToClusters.R")
 
 
 # Run:
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
+#setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
+# start R in directory:
+# cd /Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified
 
 # read in clustered point cloud:
-clusters = as.data.table(read.csv("OPTICS_clustered_points_eps_8.3_min_samples_150.csv"))
-colnames(clusters)[1] = 'X'
+clusters = as.data.table(read_feather("all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather"))
+# add column named "Label", since that is what assignPointsToClusters is looking for:
+clusters[,Label := treeID]
 
 # read in points:
 points = as.data.table(read.csv("/Users/seanhendryx/DATA/SRERInSituData/SRER_Mesq_Tower_In_Situ_Allometry/inSituCoordinatesAndMeasurements.csv"))
 
+# Make sure column cluster_ID does not exist:
 points[,cluster_ID := NULL]
 #first remove unnecessary points points:
 validIDs = c(1:170)

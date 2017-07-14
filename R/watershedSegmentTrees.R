@@ -2,6 +2,7 @@
 rm(list=ls())
 
 library(lidR)
+library(feather)
 
 
 # run from directory containing ground classified point cloud:
@@ -56,6 +57,8 @@ plot(tree, color = "treeID", colorPalette = pastel.colors(100))
 
 #save tree point cloud (clustered point cloud):
 writeLAS(tree, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.las")
+writecsv(tree@data, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.csv")
+write_feather(tree@data, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather")
 
 # Plotting raster with delineated crowns:
 library(raster)

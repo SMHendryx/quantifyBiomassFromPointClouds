@@ -19,11 +19,11 @@ Rscript run_tileR.R
 mergeTiles.R
 
 # Cluster points, via watershed, OPTICS, etc.:
-
+watershedSegmentTrees.R
 
 # set up training and validation data:
 Rscript assignPointsToClusters.R
-Rscript getFeatures.R
+Rscript extractFeatures.R
 
 # Train & validate model (report error statistics: RMSE):
 Rscript crossValModel.R

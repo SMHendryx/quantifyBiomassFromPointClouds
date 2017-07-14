@@ -5,12 +5,33 @@ library(lidR)
 library(data.table)
 library(randomForest)
 library(ggplot2)
+source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 
 
 #getdata:
 setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
+#DT of features:
 DT = as.data.table(read_feather("cluster_features.feather"))
+# Tree column is the cluster label
 
 numColsToSave = ncol(DT) - 29
 cols = names(DT)[1:numColsToSave]
 DT = DT[,.SD, .SDcols = cols]
+
+# read in points (labeled data):
+points = as.data.table(read.csv("in_situ_points_with_cluster_assignments.csv"))
+
+#compute mean axis:
+points[,Mean_Axis := ((Major_Axis + Minor_Axis)/2)]
+
+#compute Canopy Area:
+circArea = function(r){return(pi * (r^2))}
+# divide Mean_Axis by two to get radius:
+points[,Canopy_Area := circArea(Mean_Axis/2)]
+
+# compute biomass (Above Ground Biomass (AGB)):
+points[Species == "pv", AGB := mesqAllom(Canopy_Area)]
+points[Species == "cp", AGB := hackAllom(Canopy_Area)]
+points[Species == "it", AGB := burrAllom(Canopy_Area)]
+
+#Adding column of AboveGrounBiomass (what we are tyring to predict:

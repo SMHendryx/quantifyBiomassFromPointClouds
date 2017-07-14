@@ -31,8 +31,10 @@ hackAllom <- function(X){
 #Burrowweed
 #As scripted, this function returns funny values
 burrAllom <- function(X){
-   biomass<-.001*exp(4.81 + 1.25 *log(X*(1/10000)))
-   return(biomass)
+  #Convert X to square cm, as that is what the allometric eqn is written to take in paper:
+  X = X * 1000
+  biomass<-.001*exp(-4.81 + 1.25 *log(X))
+  return(biomass)
 }
 
 

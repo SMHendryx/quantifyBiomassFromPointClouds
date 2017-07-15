@@ -5,33 +5,44 @@ library(lidR)
 library(data.table)
 library(randomForest)
 library(ggplot2)
-source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
-
 
 #getdata:
 setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
 #DT of features:
 DT = as.data.table(read_feather("cluster_features.feather"))
-# Tree column is the cluster label
+# Tree column is the cluster label (points$cluster_ID)
 
 numColsToSave = ncol(DT) - 29
 cols = names(DT)[1:numColsToSave]
 DT = DT[,.SD, .SDcols = cols]
 
 # read in points (labeled data):
-points = as.data.table(read.csv("in_situ_points_with_cluster_assignments.csv"))
+points = as.data.table(read_feather("in_situ_biomass_points_with_cluster_assignments.feather"))
 
-#compute mean axis:
-points[,Mean_Axis := ((Major_Axis + Minor_Axis)/2)]
+#First, connect labels and features:
+LF = merge(DT, points, by.x = "Tree", by.y = "cluster_ID")
 
-#compute Canopy Area:
-circArea = function(r){return(pi * (r^2))}
-# divide Mean_Axis by two to get radius:
-points[,Canopy_Area := circArea(Mean_Axis/2)]
+#plotting correspondences:
+# compute CrownMetrics() Mean_Axis:
+LF[,CrownMetrics_Mean_Axis := ((EWIDTH + NWIDTH)/2)]
 
-# compute biomass (Above Ground Biomass (AGB)):
-points[Species == "pv", AGB := mesqAllom(Canopy_Area)]
-points[Species == "cp", AGB := hackAllom(Canopy_Area)]
-points[Species == "it", AGB := burrAllom(Canopy_Area)]
+p = ggplot(data = LF, mapping = aes(x = Mean_Axis,y = CrownMetrics_Mean_Axis)) + geom_point() + theme_bw() + geom_smooth(method = "lm", se = FALSE)
+p = p + labs(x = "In Situ Mean Tree Axis", y = "Point Cloud Cluster Mean Axis")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + theme(plot.title = element_text(hjust = 0.5))
+m = lm(LF$CrownMetrics_Mean_Axis ~ LF$Mean_Axis)
+r = format(summary(m)$r.squared ^ .5, digits = 3)
+text = paste0("r = ", r)
+p = p + annotate("text",x = 1, y = 19, label = text)
+p = p + geom_abline(color = "red")
+p
 
-#Adding column of AboveGrounBiomass (what we are tyring to predict:
+
+p = ggplot(data = LF[, mapping = aes(x = Mean_Axis,y = CrownMetrics_Mean_Axis)) + geom_point() + theme_bw() + geom_smooth(method = "lm", se = FALSE)
+p = p + labs(x = "In Situ Mean Tree Axis", y = "Point Cloud Cluster Mean Axis")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + theme(plot.title = element_text(hjust = 0.5))
+m = lm(LF$CrownMetrics_Mean_Axis ~ LF$Mean_Axis)
+r = format(summary(m)$r.squared ^ .5, digits = 3)
+text = paste0("r = ", r)
+p = p + annotate("text",x = 1, y = 19, label = text)
+p = p + geom_abline(color = "red")
+p

@@ -3,7 +3,6 @@
 library(feather)
 library(lidR)
 library(data.table)
-library(randomForest)
 library(ggplot2)
 source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 

@@ -23,6 +23,11 @@ watershedSegmentTrees.R
 
 # set up training and validation data:
 Rscript assignPointsToClusters.R
+
+# Compute biomass of in situ data:
+computeBiomass.R
+
+# Extract Features:
 Rscript extractFeatures.R
 
 # Train & validate model (report error statistics: RMSE):

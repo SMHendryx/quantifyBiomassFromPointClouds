@@ -9,10 +9,10 @@ source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 
 
 #getdata:
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified")
 
 # read in points (labeled data):
-points = as.data.table(read.csv("in_situ_points_with_cluster_assignments.csv"))
+points = as.data.table(read_feather("in_situ_points_with_cluster_assignments.feather"))
 
 #compute mean axis:
 points[,Mean_Axis := ((Major_Axis + Minor_Axis)/2)]

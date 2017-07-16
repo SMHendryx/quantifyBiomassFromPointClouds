@@ -7,19 +7,23 @@ library(feather)
 library(ggplot2)
 
 
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified")
 
 # Read in data:
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("OPTICS_clustered_points_eps_8.3_min_samples_150.feather"))
+clusters = as.data.table(read_feather("all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather"))
 #colnames(clusters)[1] = 'X'
 
-#add empty intensity
-clusters[,Intensity := numeric()]
+'%!in%' = function(x,y)!('%in%'(x,y))
+
+#add empty intensity if it doesn't exist
+if("Intensity" %!in% colnames(clusters)){
+  clusters[,Intensity := numeric()]
+}
 
 #redefining rLiDAR's crownMetrics to allow for NAs in Intensity since not all point clouds have intensity (also extended default precision to 5 decimal places):
 source("~/githublocal/quantifyBiomassFromPointClouds/R/CrownMetrics.R")
-metrics = CrownMetrics(as.matrix(clusters[Label != -1 ,.(X,Y,Z,Intensity, Label)]), na_rm = TRUE, digits = 5)
+metrics = CrownMetrics(as.matrix(clusters[,.(X,Y,Z,Intensity, treeID)]), na_rm = TRUE, digits = 5)
 
 DT = as.data.table(metrics)
 

@@ -27,10 +27,24 @@ LF = merge(DT, points, by.x = "Tree", by.y = "cluster_ID")
 #Sum in situ mass by cluster (i.e. "Tree" column)
 LF[,in_situ_AGB_summed_by_cluster := sum(AGB), by = Tree]
 
-#compute RS estimated biomass:
+#compute RS PC estimated biomass based off clustering:
 source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
-# i am here:
+#compute PC cluster mean axis:
+# I am here.  change columns from old code 
+LF[,PC_Mean_Axis := ((Major_Axis + Minor_Axis)/2)]
 
+#compute Canopy Area:
+circArea = function(r){return(pi * (r^2))}
+# divide Mean_Axis by two to get radius:
+points[,Canopy_Area := circArea(Mean_Axis/2)]
+
+# compute biomass (Above Ground Biomass (AGB)):
+points[Species == "pv", AGB := mesqAllom(Canopy_Area)]
+points[Species == "cp", AGB := hackAllom(Canopy_Area)]
+points[Species == "it", AGB := burrAllom(Canopy_Area)]
+
+
+####### edit to "I am here" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #plotting correspondences:
 # compute CrownMetrics() Mean_Axis:

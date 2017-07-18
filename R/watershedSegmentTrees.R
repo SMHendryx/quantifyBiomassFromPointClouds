@@ -3,27 +3,38 @@ rm(list=ls())
 
 library(lidR)
 library(feather)
+library(data.table)
 
 
 # run from directory containing ground classified point cloud:
 setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/")
 # or first cd into directory, then start R there
 
-# read file
+# read in original las file
 las = readLAS("all20TilesGroundClassified.las")
+# get header:
+oheader = las@header
 
-# ground classification
-#lasground(las, MaxWinSize = 10, InitDist = 0.05, CellSize = 7)
+# read in OPTICS outliers removed non ground points
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
 
-# normalization
+DT = as.data.table(read_feather("OPTICS_outliers_removed_points_eps_8.3_min_samples_150.feather"))
+# Add Classification, all points should be nonground (1):
+DT[,Classification := 1]
+
+#rbind ground points from full point cloud:
+
+lasnorm = LAS(DT, oheader)
+
 #dtm = grid_terrain(las, method = "kriging", k = 8)
 #^killed: 9
-dtm = grid_terrain(las, res = .1, method = "knnidw")
+#dtm = grid_terrain(las, res = .1, method = "knnidw")
 
-lasnorm = lasnormalize(las, dtm)
+#normalize nonground points that have had outliers removed:
+#lasnorm = lasnormalize(nonground, dtm)
 
-dtm = raster::as.raster(dtm)
-raster::plot(dtm)
+#dtm = raster::as.raster(dtm)
+#raster::plot(dtm)
 
 #quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphics/tree segmentation/watershed/SRER Mesq. Tower Site Digital Terrain Model - MCC-Lidar Classing & KNN-IDW Rasterization")
 #dev.off()

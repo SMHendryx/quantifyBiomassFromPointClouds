@@ -34,8 +34,8 @@ library(lidR)
 source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/R/assignPointsToClusters.R")
 
 
-# Run:
-#setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
+#Run
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
 # start R in directory:
 # cd /Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified
 
@@ -57,13 +57,17 @@ points = points[Sample_ID %in% validIDs,]
 # RUN THESIS ALGORITHMS:
 assignedPoints = assignPointsToClusters(points, clusters)
 
+write_feather(assignedPoints, "in_situ_points_with_cluster_assignments.feather")
+
 # Now run checkIfPointRepresentsMoreThanOneCluster
 #I am here:
 startTime2 = Sys.time()
 assignedPoints = checkIfPointRepresentsMoreThanOneCluster(assignedPoints, clusters)
 endTime = Sys.time()
-endTime - startTime
 endTime - startTime2
+
+endTime - startTime
+
 
 
 write.csv(assignedPoints, "in_situ_points_with_cluster_assignments.csv")
@@ -75,7 +79,8 @@ write.csv(assignedPoints, "in_situ_points_with_cluster_assignments.csv")
 # Plot assigned & threshed Points over clusters:
 clusters$Label = factor(clusters$Label)
 # make qualitative color palette:
-# 82 "color blind friendly" colors from: http://tools.medialab.sciences-po.fr/iwanthue/
+# 82 "color blind friendly" colors from: 
+# http://tools.medialab.sciences-po.fr/iwanthue/
 # with outliers set to black: "#000000",
 cbf = c(#"#000000", 
   "#be408c",

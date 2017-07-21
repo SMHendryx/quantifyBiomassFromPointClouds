@@ -23,6 +23,9 @@ points = as.data.table(read_feather("in_situ_biomass_points_with_cluster_assignm
 #First, connect labels and features:
 LF = merge(DT, points, by.x = "Tree", by.y = "cluster_ID")
 
+#remove points outside of threshold:
+LF = LF[closest_cluster_outside_threshold == FALSE]
+
 #Sum in situ mass by cluster (i.e. "Tree" column)
 LF[,in_situ_AGB_summed_by_cluster := sum(AGB), by = Tree]
 
@@ -43,9 +46,32 @@ LF[Species == "cp", cluster_measurements_AGB := hackAllom(Cluster_CA)]
 LF[Species == "it", cluster_measurements_AGB := burrAllom(Cluster_CA)]
 
 
-#plotting correspondences:
+#if we assume all clusters are mesquite:
+LF[,assume_mesq_AGB_cluster_measurements := mesqAllom(Cluster_CA)]
+#vs if we assume all clusters are hackberry:
+LF[,assume_hack_AGB_cluster_measurements := hackAllom(Cluster_CA)]
+
+pHack = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = Cluster_CA, y= assume_hack_AGB_cluster_measurements)) + geom_point() + theme_bw()
+pMesq = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = Cluster_CA, y= assume_mesq_AGB_cluster_measurements)) + geom_point() + theme_bw()
+pHack
+pMesq
+
+histDT = LF[,.(assume_hack_AGB_cluster_measurements, assume_mesq_AGB_cluster_measurements, Cluster_CA)]
+melted = melt(histDT, measure.vars = c("assume_hack_AGB_cluster_measurements", "assume_mesq_AGB_cluster_measurements"), value.name = "AGB")
+
+#both point series:
+p = ggplot(data = melted, aes(x = Cluster_CA, y = AGB, color = variable)) + geom_point() + theme_bw()+ labs(x = expression(paste("Canopy Area of Cluster (", m^{2},")")), y = "AGB Estimated from Cluster Dimensions (kg)", color = "Allometric Equation") + scale_color_manual(labels = c("Hackberry", "Mesquite"), values = c("blue", "red"))
+
+
+density = ggplot(data = melted, mapping = aes(x = value)) + geom_density(aes(fill = variable)) + theme_bw()
+
+#both 
+
+#plotting correspondence of insitu and RS-estimated mass:
 
 LF[,Tree := as.factor(Tree)]
+
+
 
 p = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = AGB,y = cluster_measurements_AGB)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
 p = p + labs(x = "In Situ AGB of Individual Trees(kg)", y = "AGB Estimated from Cluster Dimensions (kg)")# + ggtitle("Feature Family Subset Classification Performance")
@@ -53,7 +79,7 @@ p = p + theme(plot.title = element_text(hjust = 0.5))
 m = lm(LF[closest_cluster_outside_threshold==FALSE,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,AGB])
 r = format(summary(m)$r.squared ^ .5, digits = 3)
 text = paste0("r = ", r)
-p = p + annotate("text",x = 150, y = 325, label = text)
+p = p + annotate("text",x = 275, y = 2750, label = text)
 p = p + geom_abline(color = "red")
 
 
@@ -63,19 +89,20 @@ p = p + theme(plot.title = element_text(hjust = 0.5))
 m = lm(LF[closest_cluster_outside_threshold==FALSE,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,in_situ_AGB_summed_by_cluster])
 r = format(summary(m)$r.squared ^ .5, digits = 3)
 text = paste0("r = ", r)
-p = p + annotate("text",x = 150, y = 350, label = text)
+p = p + annotate("text",x = 300, y = 3500, label = text)
 p = p + geom_abline(color = "red")
 
 ply = ggplotly(p)
 ply
 
+#Same as last with no point colors
 p = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = in_situ_AGB_summed_by_cluster,y = cluster_measurements_AGB)) + geom_point( size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
 p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
 m = lm(LF[closest_cluster_outside_threshold==FALSE,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,in_situ_AGB_summed_by_cluster])
 r = format(summary(m)$r.squared ^ .5, digits = 3)
 text = paste0("r = ", r)
-p = p + annotate("text",x = 150, y = 350, label = text)
+p = p + annotate("text",x = 300, y = 2500, label = text)
 p = p + geom_abline(color = "red")
 
 

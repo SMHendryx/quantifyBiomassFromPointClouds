@@ -42,7 +42,22 @@ circArea = function(r){return(pi * (r^2))}
 # divide Mean_Axis by two to get radius:
 LF[,Cluster_CA := circArea(Cluster_Mean_Axis/2)]
 
+#get species distributions for training ecosystem allometric eqn:
+npv = nrow(LF[Species == "pv"])
+ncp = nrow(LF[Species == "cp"])
+totaln = npv + ncp
+ppv = npv/totaln
+#0.8271605
+pcp = ncp/totaln
+# 0.1728395
+
+#Get CA statistics:
+max(LF[Species == "pv",Canopy_Area])
+max(LF[Species == "cp",Canopy_Area])
+
 #I am here:  Edit this, AGB of cluster should be computed using ecosystem allometry eqn:
+
+
 # compute estimated biomass (Above Ground Biomass (AGB)) from cluster measurements:
 LF[Species == "pv", cluster_measurements_AGB := mesqAllom(Cluster_CA)]
 LF[Species == "cp", cluster_measurements_AGB := hackAllom(Cluster_CA)]

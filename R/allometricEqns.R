@@ -46,3 +46,9 @@ prickAllom <- function(r){
   biomass <-((4.189 * r^3)^0.965)/(10^5)
   return(biomass)
 }  
+
+#Add ecosystem-state, species-agnostic, allometric eqn (fit from cross validation on data generated from known species distribution):
+#I am here
+ecoAllom = function(CA){
+  AGB = 2.1820416205017237 + (CA * -2.1360573807305943) + (CA^2 * 0.9652872454049771) + (CA^3 *-0.07570817549389354) + (CA ^4 * 0.0033691625314080246) + (CA^5 *(-7.692467430793948*10^-5)) + (CA^6 * (8.681473088092661 *10^-7)) + (CA^7 * (-3.848402200960435 * 10^-9))
+}

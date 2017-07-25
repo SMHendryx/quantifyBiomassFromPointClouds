@@ -6,6 +6,17 @@ library(data.table)
 library(ggplot2)
 library(plotly)
 
+#Define functions:
+rmse = function(errors){
+  return(sqrt(mean(errors^2)))
+}
+
+# To compute RMSE, first get errors:
+getErrors = function(measured, predicted){
+  return(measured - predicted)
+}
+
+
 #getdata:
 setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
 #setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
@@ -22,12 +33,11 @@ DT = DT[,.SD, .SDcols = cols]
 # read in points (labeled data):
 points = as.data.table(read_feather("in_situ_biomass_points_with_cluster_assignments.feather"))
 
+#These next three lines of code should be moved to extractFeatures.R:
 #First, connect labels and features:
 LF = merge(DT, points, by.x = "Cluster_ID", by.y = "cluster_ID")
-
 #remove points outside of threshold:
 LF = LF[closest_cluster_outside_threshold == FALSE]
-
 #Sum in situ mass by cluster (i.e. "Cluster_ID" column)
 LF[,in_situ_AGB_summed_by_cluster := sum(AGB), by = Cluster_ID]
 
@@ -85,6 +95,8 @@ pSpec = ggplot(data = melted, mapping = aes(x = Cluster_CA,Estimated_AGB)) + geo
 write_feather(LF, "cluster_features_with_labels.feather")
 
 
+
+
 #make plots of differing assumed species:
 pHack = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = Cluster_CA, y= assume_hack_AGB_cluster_measurements)) + geom_point() + theme_bw()
 pMesq = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = Cluster_CA, y= assume_mesq_AGB_cluster_measurements)) + geom_point() + theme_bw()
@@ -108,15 +120,19 @@ density = ggplot(data = melted, mapping = aes(x = value)) + geom_density(aes(fil
 
 LF[,Cluster_ID := as.factor(Cluster_ID)]
 
-
+# without assigning points to clusters, this is what you get:
 # when we don't specify the species of the allometric equation
-p = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = AGB,y = cluster_measurements_AGB)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
+#first compute RMSE:
+errors = getErrors(LF$cluster_measurements_AGB, LF$AGB)
+RMSE = rmse(errors)
+p = ggplot(data = LF, mapping = aes(x = AGB,y = cluster_measurements_AGB)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
 p = p + labs(x = "In Situ AGB of Individual Trees(kg)", y = "AGB Estimated from Cluster Dimensions (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
-m = lm(LF[closest_cluster_outside_threshold==FALSE,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,AGB])
-r = format(summary(m)$r.squared ^ .5, digits = 3)
-text = paste0("r = ", r)
-p = p + annotate("text",x = 275, y = 2750, label = text)
+m = lm(LF[,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,AGB])
+#r2 = format(summary(m)$r.squared, digits = 3)
+#text = paste("r^2 == ", r2)
+text = paste("RMSE == ", RMSE)
+p = p + annotate("text",x = 275, y = 2750, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
 
 #specifying mesquite allometric eqn:
@@ -130,41 +146,83 @@ p = p + annotate("text",x = 275, y = 2750, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
 
 
-# and now plotting summed in situ mass by cluster:
-p = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = in_situ_AGB_summed_by_cluster,y = cluster_measurements_AGB)) + geom_point(mapping = aes(color = Cluster_ID), size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
+# and now plotting summed in situ mass by cluster, coloring by species to show the variance in prediction:
+errors = getErrors(LF$cluster_measurements_AGB, LF$AGB)
+RMSE = rmse(errors)
+p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = cluster_measurements_AGB)) + geom_point(mapping = aes(color = Species), size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE)# + guides(color=FALSE) #guides(fill=FALSE) removes legend
 p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
-m = lm(LF[closest_cluster_outside_threshold==FALSE,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,in_situ_AGB_summed_by_cluster])
-r = format(summary(m)$r.squared ^ .5, digits = 3)
-text = paste0("r = ", r)
-p = p + annotate("text",x = 300, y = 3500, label = text)
-p = p + geom_abline(color = "red")
-
-# and now plotting summed in situ mass by cluster:
-p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = assume_mesq_AGB_cluster_measurements)) + geom_point(mapping = aes(color = Cluster_ID), size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
-p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions (kg)")# + ggtitle("Feature Family Subset Classification Performance")
-p = p + theme(plot.title = element_text(hjust = 0.5))
-m = lm(LF[,assume_mesq_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
-r2 = format(summary(m)$r.squared, digits = 3)
-text = paste("r^2 == ", r2)
+m = lm(LF[,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,in_situ_AGB_summed_by_cluster])
+#r2 = format(summary(m)$r.squared, digits = 3)
+#text = paste("r^2 == ", r2)
+text = paste("RMSE == ", RMSE)
 p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
 
+
+
+# and now plotting summed in situ mass by cluster:
+errors = getErrors(LF$cluster_measurements_AGB, LF$AGB)
+RMSE = rmse(errors)
+p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = cluster_measurements_AGB)) + geom_point(mapping = aes(color = Cluster_ID), size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
+p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + theme(plot.title = element_text(hjust = 0.5))
+m = lm(LF[,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,in_situ_AGB_summed_by_cluster])
+#r2 = format(summary(m)$r.squared, digits = 3)
+#text = paste("r^2 == ", r2)
+text = paste("RMSE == ", RMSE)
+p = p + annotate("text",x = 300, y = 3500, label = text)
+p = p + geom_abline(color = "red")
+
+
+
+# and now assuming all clusters are mesquite:
+errors = getErrors(LF$assume_mesq_AGB_cluster_measurements, LF$in_situ_AGB_summed_by_cluster)
+RMSE = rmse(errors)
+p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = assume_mesq_AGB_cluster_measurements)) + geom_point(mapping = aes(color = Cluster_ID), size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
+p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions Assuming Mesquite Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + theme(plot.title = element_text(hjust = 0.5))
+#m = lm(LF[,assume_mesq_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
+#r2 = format(summary(m)$r.squared, digits = 3)
+#text = paste("r^2 == ", r2)
+text = paste("RMSE == ", RMSE)
+p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
+p = p + geom_abline(color = "red")
 
 ply = ggplotly(p)
 ply
 
 #Same as last with no point colors
 # and now plotting summed in situ mass by cluster:
-#I am here: SHOULD ANNOTATE WITH RMSE INSTEAD OF R SQUARED
+#ANNOTATE WITH RMSE INSTEAD OF R SQUARED
+errors = getErrors(LF$assume_mesq_AGB_cluster_measurements, LF$in_situ_AGB_summed_by_cluster)
+RMSE = rmse(errors)
 p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = assume_mesq_AGB_cluster_measurements)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
-p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions Assuming Mesquite Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
-m = lm(LF[,assume_mesq_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
-r2 = format(summary(m)$r.squared, digits = 3)
-text = paste("r^2 == ", r2)
+#m = lm(LF[,assume_mesq_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
+#r2 = format(summary(m)$r.squared, digits = 3)
+#text = paste("r^2 == ", r2)
+text = paste("RMSE == ", RMSE)
 p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
+
+# Now using ecosystem allometry:
+errors = getErrors(LF$ecoAllom_AGB_cluster_measurements, LF$in_situ_AGB_summed_by_cluster)
+RMSE = rmse(errors)
+p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = ecoAllom_AGB_cluster_measurements)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
+p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions & Ecosystem-State Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + theme(plot.title = element_text(hjust = 0.5))
+#m = lm(LF[,ecoAllom_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
+#r2 = format(summary(m)$r.squared, digits = 3)
+#text = paste("r^2 == ", r2)
+text = paste("RMSE == ", RMSE)
+p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
+p = p + geom_abline(color = "red")
+
+
+
+
 
 
 

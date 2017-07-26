@@ -62,7 +62,11 @@ LF[,in_situ_AGB_summed_by_cluster := sum(AGB), by = Cluster_ID]
 LF[,Sample_ID := NULL]
 LF[,AGB := NULL]
 
+#Remove duplicated rows now that biomass has been summed by cluster:
+setkey(LF, NULL)
+LF = unique(LF)
+
 #write to disk:
 # Tree column is the cluster label
-write_feather(DT, "cluster_features_with_Label.feather")
-write.csv(DT, "cluster_features_with_Label.csv")
+write_feather(LF, "cluster_features_with_label.feather")
+write.csv(LF, "cluster_features_with_label.csv")

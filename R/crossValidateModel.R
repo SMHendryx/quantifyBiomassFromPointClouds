@@ -50,7 +50,7 @@ testDeterministic = function(LF){
   return(RMSE)
 }
 
-crossValidate = function(LF, k = 10){
+crossValidate = function(LF, k = 10, write = TRUE){
   # crossval inspiration taken from: https://gist.github.com/bhoung/11237681
   
   ks = 1:k
@@ -69,8 +69,9 @@ crossValidate = function(LF, k = 10){
     #trainingset <- subset(data, id %in% list[-i])
     #testset <- subset(data, id %in% c(i))
     trainDT = copy(LF[kid %in% ks[-fold]])
-    trainDT[,kid := NULL]
     #trainDT = subset(LF, kid %in% ks[-fold])
+    trainDT[,kid := NULL]
+    #
 
     #make test dataset:
     testDT = copy(LF[kid == fold,])
@@ -81,7 +82,12 @@ crossValidate = function(LF, k = 10){
     RMSE_deterministic = testDeterministic(testDT)
     validationDT[Fold == fold, RMSE_deterministic := RMSE_deterministic]
 
-    testModel(testDT, model)
+    RMSE_model = testModel(testDT, model)
+    validationDT[Fold == fold, RMSE_model := RMSE_model]
+  }
+  print(validationDT)
+  if(write == TRUE){
+    write.csv(validationDT, "crossValResults.csv")
   }
 }
 # End function definitions
@@ -95,3 +101,4 @@ setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_stu
 LF = as.data.table(read_feather("cluster_features_with_label.feather"))
 setnames(LF, "in_situ_AGB_summed_by_cluster", "Label")
 
+crossValidate(LF, k)

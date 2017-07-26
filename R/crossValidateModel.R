@@ -15,6 +15,7 @@ getErrors = function(measured, predicted){
 
 #Define functions:
 rmse = function(errors){
+  # will work on a list of error values or a single error value (in which case, the same value is returned)
   return(sqrt(mean(errors^2)))
 }
 
@@ -25,7 +26,12 @@ trainModel = function(LF){
 }
 
 testModel = function(LF, model){
-
+  # Returns predictions
+  # I am here this function needs testing
+  F = copy(LF)
+  F[,Label := NULL]
+  predictions = as.data.table(as.data.frame(predict(model, F)))
+  return(predictions)
 }
 
 #compute Canopy Area:
@@ -77,7 +83,8 @@ crossValidate = function(LF, k = 10, write = TRUE){
     testDT = copy(LF[kid == fold,])
     testDT[,kid := NULL]
 
-    model = trainModel(trainDT)
+    # I am here.  Update to code structure: make data.table of all predictions on test set and cbind with the actual values of the test set inside k-folds for loop
+    predictions = trainModel(trainDT)
 
     RMSE_deterministic = testDeterministic(testDT)
     validationDT[Fold == fold, RMSE_deterministic := RMSE_deterministic]

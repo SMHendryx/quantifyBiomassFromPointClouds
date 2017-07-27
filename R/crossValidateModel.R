@@ -56,15 +56,22 @@ testDeterministic = function(LF){
   return(RMSE)
 }
 
-crossValidate = function(LF, k = 10, write = TRUE){
+crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
+  # Runs cross-validation.  
+  # param LF: a data.table with a column "Label" and all other columns are features.  Rows are observations.
+  # param k: number of folds
+  # param LOOCV: if TRUE, run Leave One Out Cross Val, i.e. numnber of folds = nrow(LF)
+  # param write: if TRUE, writes csv of cross val results in current working directory
   # crossval inspiration taken from: https://gist.github.com/bhoung/11237681
   
-  ks = 1:k
+  if(LOOCV){ks = seq(1, nrow(LF))} else {ks = 1:k}
+  
   kid = sample(ks, nrow(LF), replace = TRUE)
   LF[,kid := kid]
 
-  validationDT = data.table(Fold = ks, RMSE_model = NA_integer_, RMSE_deterministic = NA_integer_)
-
+  validationDT = data.table(Fold = NA_integer_, Model_Predictions = NA_integer_, Deterministic_Predictions = NA_integer_, Actual = NA_integer_)
+  tempValDT = data.table(Fold = NA_integer_, Model_Predictions = NA_integer_, Deterministic_Predictions = NA_integer_, Actual = NA_integer_)
+  
   #Creating a progress bar to know the status of CV
   progressBar = create_progress_bar("text")
   progressBar$init(k)
@@ -84,13 +91,17 @@ crossValidate = function(LF, k = 10, write = TRUE){
     testDT[,kid := NULL]
 
     # I am here.  Update to code structure: make data.table of all predictions on test set and cbind with the actual values of the test set inside k-folds for loop
-    predictions = trainModel(trainDT)
+    model = trainModel(trainDT)
+    
+    tempValDT[,Deterministic_Predictions := testDeterministic(testDT)]
+    tempValDT[,Model_Predictions := testModel(testDT, model)]
+    tempValDT[,Actual := testDT$Label]
+    tempValDT[,Fold := fold]
+    validationDT = rbind(validationDT, tempValDT)
+    
 
-    RMSE_deterministic = testDeterministic(testDT)
-    validationDT[Fold == fold, RMSE_deterministic := RMSE_deterministic]
-
-    RMSE_model = testModel(testDT, model)
-    validationDT[Fold == fold, RMSE_model := RMSE_model]
+    #validationDT[Fold == fold, RMSE_deterministic := RMSE_deterministic]
+    #validationDT[Fold == fold, RMSE_model := RMSE_model]
   }
   print(validationDT)
   if(write == TRUE){

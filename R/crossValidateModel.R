@@ -107,6 +107,7 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
   if(write == TRUE){
     write.csv(validationDT, "crossValResults.csv")
   }
+  return(validationDT)
 }
 # End function definitions
 
@@ -119,4 +120,6 @@ setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_stu
 LF = as.data.table(read_feather("cluster_features_with_label.feather"))
 setnames(LF, "in_situ_AGB_summed_by_cluster", "Label")
 
-crossValidate(LF, k)
+results = crossValidate(LF, k, LOOCV = TRUE)
+
+

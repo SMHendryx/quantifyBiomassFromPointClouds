@@ -5,20 +5,33 @@ library(data.table)
 library(feather)
 library(ggplot2)
 library(randomForest)
+library(plyr)
 source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 
 
+#Define functions:
 # To compute RMSE, first get errors:
 getErrors = function(measured, predicted){
   return(measured - predicted)
 }
 
-#Define functions:
 rmse = function(errors){
+  # Computes Root Mean Square Error
   # will work on a list of error values or a single error value (in which case, the same value is returned)
   return(sqrt(mean(errors^2)))
 }
 
+mae = function(errors){
+  # Computes Mean Absolute Error
+  # will work on a list of error values or a single error value (in which case, the same value is returned)
+  return(mean(abs(errors)))
+}
+
+#mae = function(measured, predicted){
+#  # Computes Mean Absolute Error
+#  # will work on a list of error values or a single error value (in which case, the same value is returned)
+#  return(mean(abs(getErrors(measured, predicted))))
+#}
 
 trainModel = function(LF){
   model = randomForest(LF$Label ~ ., data = LF)
@@ -26,8 +39,8 @@ trainModel = function(LF){
 }
 
 testModel = function(LF, model){
-  # Returns predictions
-  # I am here this function needs testing
+  # Returns model predictions
+  
   F = copy(LF)
   F[,Label := NULL]
   predictions = as.data.table(as.data.frame(predict(model, F)))
@@ -38,8 +51,8 @@ testModel = function(LF, model){
 circArea = function(r){return(pi * (r^2))}
 
 testDeterministic = function(LF){
-  # Functoin returns RMSE on test set
-
+  # Returns deterministic predictions
+  
   LF = copy(LF)
   #compute PC cluster mean axis:
   LF[,Cluster_Mean_Axis := ((EWIDTH + NWIDTH)/2)]
@@ -47,13 +60,13 @@ testDeterministic = function(LF){
   circArea = function(r){return(pi * (r^2))}
   # divide Mean_Axis by two to get radius:
   LF[,Cluster_CA := circArea(Cluster_Mean_Axis/2)]
-
+  
   #compute ecoAllom, deterministic mass as baseline:
-  LF[,ecoAllom_AGB_cluster_measurements := ecoAllom(Cluster_CA)]
-
-  errors = getErrors(LF[,Label], LF[,ecoAllom_AGB_cluster_measurements])
-  RMSE = rmse(errors)
-  return(RMSE)
+  deterministicPredictions = ecoAllom(LF[,Cluster_CA])
+  return(deterministicPredictions)
+  #errors = getErrors(LF[,Label], LF[,ecoAllom_AGB_cluster_measurements])
+  #RMSE = rmse(errors)
+  #return(RMSE)
 }
 
 crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
@@ -64,23 +77,25 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
   # param write: if TRUE, writes csv of cross val results in current working directory
   # crossval inspiration taken from: https://gist.github.com/bhoung/11237681
   
-  if(LOOCV){ks = seq(1, nrow(LF))} else {ks = 1:k}
+  if(LOOCV){
+    ks = seq(1, nrow(LF))
+    LF[,kid := ks]
+  } else {
+    ks = 1:k
+    kid = sample(ks, nrow(LF), replace = TRUE)
+    LF[,kid := kid]
+  }
   
-  kid = sample(ks, nrow(LF), replace = TRUE)
-  LF[,kid := kid]
-
-  validationDT = data.table(Fold = NA_integer_, Model_Predictions = NA_integer_, Deterministic_Predictions = NA_integer_, Actual = NA_integer_)
-  tempValDT = data.table(Fold = NA_integer_, Model_Predictions = NA_integer_, Deterministic_Predictions = NA_integer_, Actual = NA_integer_)
+  validationDT = data.table(Fold = numeric(), Model_Predictions =  numeric(), Deterministic_Predictions =  numeric(), Actual =  numeric())
   
   #Creating a progress bar to know the status of CV
   progressBar = create_progress_bar("text")
   progressBar$init(k)
-
+  
   for(fold in ks){
+    print(paste("Testing fold: ", fold))
+
     #make training dataset:
-    #sample(x, size, replace = FALSE, prob = NULL)
-    #trainingset <- subset(data, id %in% list[-i])
-    #testset <- subset(data, id %in% c(i))
     trainDT = copy(LF[kid %in% ks[-fold]])
     #trainDT = subset(LF, kid %in% ks[-fold])
     trainDT[,kid := NULL]
@@ -88,6 +103,8 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
 
     #make test dataset:
     testDT = copy(LF[kid == fold,])
+    #instantiate datatable to store the prediction & val results of this fold:
+    tempValDT = data.table(Fold = testDT[,kid], Model_Predictions =  NA_integer_, Deterministic_Predictions =  NA_integer_, Actual =  NA_integer_)
     testDT[,kid := NULL]
 
     # I am here.  Update to code structure: make data.table of all predictions on test set and cbind with the actual values of the test set inside k-folds for loop
@@ -105,7 +122,7 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
   }
   print(validationDT)
   if(write == TRUE){
-    write.csv(validationDT, "crossValResults.csv")
+    write.csv(validationDT, "crossValResults.csv", row.names = FALSE)
   }
   return(validationDT)
 }
@@ -113,13 +130,46 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
 
 
 # Run main:
-k = 5
+#k = 5
 
 setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
 
 LF = as.data.table(read_feather("cluster_features_with_label.feather"))
+LF[,Cluster_ID := NULL]
 setnames(LF, "in_situ_AGB_summed_by_cluster", "Label")
 
-results = crossValidate(LF, k, LOOCV = TRUE)
+results = crossValidate(LF, LOOCV = TRUE)
+
+modelErrors = getErrors(results$Actual, results$Model_Predictions)
+deterministicErrors = getErrors(results$Actual, results$Deterministic_Predictions)
+
+dRMSE = rmse(deterministicErrors)
+print(paste("deterministic RMSE = ", dRMSE))
+modelRMSE = rmse(modelErrors)
+print(paste("randomForest RMSE = ", modelRMSE))
+
+
+dMAE = mae(deterministicErrors)
+print(paste("deterministic MAE = ", dMAE))
+modelMAE = mae(modelErrors)
+print(paste("randomForest MAE = ", modelMAE))
+
+
+
+
+eDT = as.data.table(cbind(modelErrors, deterministicErrors))
+melted = melt(eDT)
+dens = ggplot(data = melted, mapping = aes(x = value, color = variable)) + geom_density()
+
+meltr = melt(results, measure.vars= c("Model_Predictions", "Deterministic_Predictions"))
+p = ggplot(data = meltr, mapping = aes(x = Actual, y = value, color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm")
+p = p + labs(x = "AGB Reference (kg)", y = "AGB Estimate (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + theme(plot.title = element_text(hjust = 0.5))
+p = p + geom_abline(color = "red")
+
+#adding Actual and Fold columns to error datatable:
+eDT[,Actual := results[,Actual]][,Fold := results[,Fold]]
+melted2 = melt(eDT)
+c = ggplot(data = melted2, mapping = aes(x = Fold))
 
 

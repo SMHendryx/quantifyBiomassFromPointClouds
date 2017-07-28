@@ -12,7 +12,7 @@ source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 #Define functions:
 # To compute RMSE, first get errors:
 getErrors = function(measured, predicted){
-  return(measured - predicted)
+  return(predicted - measured)
 }
 
 rmse = function(errors){
@@ -107,7 +107,6 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
     tempValDT = data.table(Fold = testDT[,kid], Model_Predictions =  NA_integer_, Deterministic_Predictions =  NA_integer_, Actual =  NA_integer_)
     testDT[,kid := NULL]
 
-    # I am here.  Update to code structure: make data.table of all predictions on test set and cbind with the actual values of the test set inside k-folds for loop
     model = trainModel(trainDT)
     
     tempValDT[,Deterministic_Predictions := testDeterministic(testDT)]
@@ -154,7 +153,7 @@ print(paste("deterministic MAE = ", dMAE))
 modelMAE = mae(modelErrors)
 print(paste("randomForest MAE = ", modelMAE))
 
-
+reducedPercentage = (dMAE - modelMAE)/dMAE
 
 
 eDT = as.data.table(cbind(modelErrors, deterministicErrors))
@@ -169,7 +168,11 @@ p = p + geom_abline(color = "red")
 
 #adding Actual and Fold columns to error datatable:
 eDT[,Actual := results[,Actual]][,Fold := results[,Fold]]
-melted2 = melt(eDT)
-c = ggplot(data = melted2, mapping = aes(x = Fold))
+melted2 = melt(eDT, measure.vars = c("modelErrors", "deterministicErrors"))
+c = ggplot(data = melted2, mapping = aes(x = Fold, y = cumsum(value), color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Difference from Test Data (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 
+cabs = ggplot(data = melted2, mapping = aes(x = Fold, y = cumsum(abs(value)), color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Absolute Difference from Test Data (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+
+#i am here
+#now do t.test on errors to show significant reduction
 

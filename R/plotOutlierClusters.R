@@ -9,6 +9,8 @@ library(raster)
 library(rgeos)
 library(ggplot2)
 library(feather)
+library(rgl)
+source("~/githublocal/quantifyBiomassFromPointClouds/R/utils_colors.R")
 
 
 # Run:
@@ -27,8 +29,23 @@ colnames(clusters)[1] = 'X'
 
 clusters[,Classification := 1]
 
-clusters[treeID == 78 | treeID == 4,Outlier := TRUE]
+#here
+# making new las files of only the outlier clusters and removing the outliers from clusters:
+c78DT = clusters[treeID == 78,]
+c4DT = clusters[treeID ==4,]
 
-las = LAS(clusters, oheader)
+c78 = LAS(c78DT, oheader)
+c4 = LAS(c4DT, oheader)
 
-plot(las, color = "Outlier")
+plot(c4)
+
+#with rgl:
+rgl.open()
+rgl.points(c4DT$X, c4DT$Y, c4DT$Z, color = lidR::set.colors(c4DT$Z))
+rgl.bg(color = "black")
+
+play3d(spin3d(axis = c(0, 1, 0)))
+
+write_feather(outliersRemoved, "outlier_clusters/outlier_clusters_removed_all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather")
+witeLAS(c78, "outlier_clusters/c78.las")
+writeLAS(c4, "outlier_clusters/c4.las")

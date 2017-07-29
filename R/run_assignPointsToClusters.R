@@ -6,7 +6,7 @@
 # Though, this is not usually the case.  These algorithms present one approach to resolving the differences in representation. 
 # 
 # Created by Sean Hendryx
-# seanmhendryx@email.arizona.edu https://github.com/SMHendryx/assignPointsToClusters
+# seanmhendryx at email.arizona.edu https://github.com/SMHendryx/assignPointsToClusters
 # Copyright (c)  2017 Sean Hendryx
 #
 # This program is free software: you can redistribute it and/or modify

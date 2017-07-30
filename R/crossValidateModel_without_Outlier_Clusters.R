@@ -275,6 +275,8 @@ p = ggplot(data = melted2, aes(x = Actual, y = abs(value), color = variable)) + 
 
 p = ggplot(data = melted2, aes(x = Actual, y = value, color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm")
 
+
+#Adding mean of RF and Ecosystem State Allometry model:
 results[,Mean_RF_EcoAllo := ((Model_Predictions + Deterministic_Predictions)/2)]
 eDT[,meanRFEcoAlloErrors := getErrors(results$Actual, results$Mean_RF_EcoAllo)]
 
@@ -286,11 +288,21 @@ p = p + geom_abline(color = "red")
 
 # Making column of cumulatively summed errors:
 eDT[, cModelErrors := cumsum(modelErrors)][,cDeterministicErrors := cumsum(deterministicErrors)][,cMesqAssumptionErrors := cumsum(mesqAssumptionErrors)][,cMeanRFEcoAllErrors := cumsum(meanRFEcoAlloErrors)]
-melted3 = melt(eDT, measure.vars = c("cModelErrors", "cDeterministicErrors", "cMesqAssumptionErrors"))
+melted3 = melt(eDT, measure.vars = c("cModelErrors", "cDeterministicErrors", "cMesqAssumptionErrors", "cMeanRFEcoAllErrors"))
 melted3[,c("modelErrors", "deterministicErrors", "mesqAssumptionErrors") := NULL]
-c2 = ggplot(data = melted3, mapping = aes(x = Fold, y = value, color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Difference from Test Data (kg)") + scale_color_hue(name = "Prediction Type", 
-                      breaks=c("cModelErrors","cDeterministicErrors", "cMesqAssumptionErrors"), 
-                      labels=c("RF Model Errors", "Ecosystem State Allometric Error", "Assumed Mesquite Allometric Error"))
+c3 = ggplot(data = melted3, mapping = aes(x = Fold, y = value, color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Difference from Test Data (kg)") + scale_color_hue(name = "Prediction Type", 
+                      breaks=c("cModelErrors","cDeterministicErrors", "cMesqAssumptionErrors", "cMeanRFEcoAllErrors"), 
+                      labels=c("RF Model Errors", "Ecosystem State Allometric Error", "Assumed Mesquite Allometric Error", "Mean of RF & Ecosystem State"))
+
+
+# Making column of cumulatively summed errors:
+eDT[, cModelErrors := cumsum(abs(modelErrors))][,cDeterministicErrors := cumsum(abs(deterministicErrors))][,cMesqAssumptionErrors := cumsum(abs(mesqAssumptionErrors))][,cMeanRFEcoAllErrors := cumsum(abs(meanRFEcoAlloErrors))]
+melted3 = melt(eDT, measure.vars = c("cModelErrors", "cDeterministicErrors", "cMesqAssumptionErrors", "cMeanRFEcoAllErrors"))
+melted3[,c("modelErrors", "deterministicErrors", "mesqAssumptionErrors") := NULL]
+c3 = ggplot(data = melted3, mapping = aes(x = Fold, y = value, color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Absolute Difference from Test Data (kg)") + scale_color_hue(name = "Prediction Type", 
+                      breaks=c("cModelErrors","cDeterministicErrors", "cMesqAssumptionErrors", "cMeanRFEcoAllErrors"), 
+                      labels=c("RF Model Errors", "Ecosystem State Allometric Error", "Assumed Mesquite Allometric Error", "Mean of RF & Ecosystem State"))
+
 
 
 

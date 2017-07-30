@@ -6,7 +6,7 @@
 # Though, this is not usually the case.  These algorithms present one approach to resolving the differences in representation. 
 # 
 # Created by Sean Hendryx
-# seanmhendryx at email.arizona.edu https://github.com/SMHendryx/assignPointsToClusters
+# seanmhendryx@email.arizona.edu https://github.com/SMHendryx/assignPointsToClusters
 # Copyright (c)  2017 Sean Hendryx
 #
 # This program is free software: you can redistribute it and/or modify
@@ -33,7 +33,8 @@ library(feather)
 source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/assignPointsToClusters.R")
 
 
-# Run:
+# Run test:
+
 setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
 
 # read in clustered point cloud:

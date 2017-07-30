@@ -19,6 +19,10 @@ Rscript run_tileR.R
 mergeTiles.R
 
 # Cluster points, via watershed, OPTICS, etc.:
+# use OPTICS to identify outliers:
+run_OPTICS.R
+remove_OPTICS_outliers.R
+# then run watershed on point cloud that doesn't have outliers:
 watershedSegmentTrees.R
 
 # set up training and validation data:
@@ -29,6 +33,8 @@ computeBiomass.R
 
 # Extract Features:
 Rscript extractFeatures.R
+#Connect cluster features and biomass:
+Rscript correspondWatershedClusters
 
 # Train & validate model (report error statistics: RMSE):
 Rscript crossValModel.R

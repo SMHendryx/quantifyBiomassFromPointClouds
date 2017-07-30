@@ -1,0 +1,29 @@
+10-fold CV trials (trial number, best polygon order from CV, Min mean CV loss):  
+[[  0.           3.          12.92798703]]
+Best-fit model order according to 10-folds CV:
+3
+model_order 3
+x.shape (9999,)
+X.shape (9999, 4)
+t.shape (9999,)
+w.shape (4,)
+wHat:  [-5.420698838707066 2.741565271390932 0.11104640206148396
+ -0.00012095600315571314]
+('Best-fit model parameters: ', array([-5.420698838707066, 2.741565271390932, 0.11104640206148396,
+       -0.00012095600315571314], dtype=object))
+
+
+OLD, WHEN DATA IS GENERATED WITH SMALLER CPS:
+Best-fit model order according to 10-folds CV:
+7
+model_order 7
+x.shape (9999,)
+X.shape (9999, 8)
+t.shape (9999,)
+w.shape (8,)
+wHat:  [2.1820416205017237 -2.1360573807305943 0.9652872454049771
+ -0.07570817549389354 0.0033691625314080246 -7.692467430793948e-05
+ 8.681473088092661e-07 -3.848402200960435e-09]
+('Best-fit model parameters: ', array([2.1820416205017237, -2.1360573807305943, 0.9652872454049771,
+       -0.07570817549389354, 0.0033691625314080246, -7.692467430793948e-05,
+       8.681473088092661e-07, -3.848402200960435e-09], dtype=object))

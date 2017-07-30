@@ -1,5 +1,7 @@
 # Runs k-folds cross validation on a machine learning model
 
+# Clear workspace:
+rm(list=ls())
 library(lidR)
 library(data.table)
 library(feather)
@@ -33,8 +35,13 @@ mae = function(errors){
 #  return(mean(abs(getErrors(measured, predicted))))
 #}
 
-trainModel = function(LF){
-  model = randomForest(LF$Label ~ ., data = LF)
+trainModel = function(LF, mtry, biasCorrection = FALSE) {
+  if(missing(mtry)) {
+    model = randomForest(LF$Label ~ ., data = LF, corr.bias=biasCorrection)
+  }
+  else {
+    model = randomForest(LF$Label ~ ., data = LF, mtry = mtry, corr.bias=biasCorrection)
+  }
   return(model)
 }
 
@@ -51,8 +58,7 @@ testModel = function(LF, model){
 circArea = function(r){return(pi * (r^2))}
 
 testDeterministic = function(LF){
-  # Returns deterministic predictions
-  
+  # Returns deterministic predictions using ecosystem-state allometric equation:
   LF = copy(LF)
   #compute PC cluster mean axis:
   LF[,Cluster_Mean_Axis := ((EWIDTH + NWIDTH)/2)]
@@ -69,7 +75,22 @@ testDeterministic = function(LF){
   #return(RMSE)
 }
 
-crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
+assumeMesq = function(LF){
+  # Returns deterministic predictions using ecosystem-state allometric equation:
+  LF = copy(LF)
+  #compute PC cluster mean axis:
+  LF[,Cluster_Mean_Axis := ((EWIDTH + NWIDTH)/2)]
+  #compute Canopy Area:
+  circArea = function(r){return(pi * (r^2))}
+  # divide Mean_Axis by two to get radius:
+  LF[,Cluster_CA := circArea(Cluster_Mean_Axis/2)]
+  
+  #compute ecoAllom, deterministic mass as baseline:
+  deterministicPredictions = mesqAllom(LF[,Cluster_CA])
+  return(deterministicPredictions)
+}
+
+crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE, mtry, biasCorrection = FALSE){
   # Runs cross-validation.  
   # param LF: a data.table with a column "Label" and all other columns are features.  Rows are observations.
   # param k: number of folds
@@ -86,7 +107,7 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
     LF[,kid := kid]
   }
   
-  validationDT = data.table(Fold = numeric(), Model_Predictions =  numeric(), Deterministic_Predictions =  numeric(), Actual =  numeric())
+  validationDT = data.table(Fold = numeric(), Model_Predictions =  numeric(), Deterministic_Predictions =  numeric(), Mesquite_Allometry_Assumed = numeric(), Actual =  numeric())
   
   #Creating a progress bar to know the status of CV
   progressBar = create_progress_bar("text")
@@ -104,12 +125,15 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
     #make test dataset:
     testDT = copy(LF[kid == fold,])
     #instantiate datatable to store the prediction & val results of this fold:
-    tempValDT = data.table(Fold = testDT[,kid], Model_Predictions =  NA_integer_, Deterministic_Predictions =  NA_integer_, Actual =  NA_integer_)
+    tempValDT = data.table(Fold = testDT[,kid], Model_Predictions =  NA_integer_, Deterministic_Predictions =  NA_integer_, Mesquite_Allometry_Assumed = NA_integer_, Actual =  NA_integer_)
     testDT[,kid := NULL]
 
-    model = trainModel(trainDT)
-    
+    model = trainModel(trainDT, biasCorrection)
+    #plot(model)
+    #varImpPlot(model)
+
     tempValDT[,Deterministic_Predictions := testDeterministic(testDT)]
+    tempValDT[,Mesquite_Allometry_Assumed := assumeMesq(testDT)]
     tempValDT[,Model_Predictions := testModel(testDT, model)]
     tempValDT[,Actual := testDT$Label]
     tempValDT[,Fold := fold]
@@ -131,49 +155,145 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
 # Run main:
 #k = 5
 
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers/outlier_clusters")
 
-LF = as.data.table(read_feather("cluster_features_with_label.feather"))
-LF[,Cluster_ID := NULL]
+LF = as.data.table(read_feather("../cluster_features_with_label.feather"))
+LF[,Outlier_Cluster := FALSE][Cluster_ID == 78 | Cluster_ID == 4, Outlier_Cluster := TRUE]
 setnames(LF, "in_situ_AGB_summed_by_cluster", "Label")
 
-results = crossValidate(LF, LOOCV = TRUE)
+LF = LF[Outlier_Cluster == FALSE,]
+
+#remove Cluster_ID because it is not a feature for prediction, only a bookkeeping index:
+LF[,Cluster_ID := NULL]
+LF[,Outlier_Cluster := NULL]
+
+results = crossValidate(LF, LOOCV = TRUE, biasCorrection = FALSE)
 
 modelErrors = getErrors(results$Actual, results$Model_Predictions)
 deterministicErrors = getErrors(results$Actual, results$Deterministic_Predictions)
+mesqAssumptionErrors = getErrors(results$Actual, results$Mesquite_Allometry_Assumed)
 
 dRMSE = rmse(deterministicErrors)
 print(paste("deterministic RMSE = ", dRMSE))
 modelRMSE = rmse(modelErrors)
 print(paste("randomForest RMSE = ", modelRMSE))
-
+mesqRMSE = rmse(mesqAssumptionErrors)
+mesqRMSE
 
 dMAE = mae(deterministicErrors)
 print(paste("deterministic MAE = ", dMAE))
 modelMAE = mae(modelErrors)
 print(paste("randomForest MAE = ", modelMAE))
+mesqMAE = mae(mesqAssumptionErrors)
+mesqMAE
 
 reducedPercentage = (dMAE - modelMAE)/dMAE
+reducedPercentage
+# with outlier clusters:
 #0.355991
 # By using the randomForest-cluster model, error was reduced by 35.6% from the deterministic model.
 
-eDT = as.data.table(cbind(modelErrors, deterministicErrors))
+percReducedFromMesqAssumption = (mesqMAE - modelMAE)/mesqMAE
+percReducedFromMesqAssumption
+
+
+gridSearch = FALSE
+if(gridSearch){
+  #Grid search through mtry:
+  mtries = seq(2,ncol(LF) - 2)
+  modelMAEs = c()
+  i = 1
+  for(mtry in mtries){
+
+    results = crossValidate(LF, LOOCV = TRUE, mtry = mtry, biasCorrection = FALSE)
+
+    modelErrors = getErrors(results$Actual, results$Model_Predictions)
+    #deterministicErrors = getErrors(results$Actual, results$Deterministic_Predictions)
+    
+    #dRMSE = rmse(deterministicErrors)
+    print(paste("deterministic RMSE = ", dRMSE))
+    modelRMSE = rmse(modelErrors)
+    print(paste("randomForest RMSE = ", modelRMSE))
+
+
+    #dMAE = mae(deterministicErrors)
+    print(paste("deterministic MAE = ", dMAE))
+    modelMAE = mae(modelErrors)
+    print(paste("randomForest MAE = ", modelMAE))
+
+    modelMAEs[[i]] = modelMAE
+
+    reducedPercentage = (dMAE - modelMAE)/dMAE
+    reducedPercentage
+
+    i = i + 1
+  }
+  mtrySearchDT = data.table(mtry = mtries, model_MAE = modelMAEs, dMAE = dMAE)
+  plot(mtrySearchDT$mtry, mtrySearchDT$model_MAE, main = "Grid Search Through RF mtry Parameter Settings", xlab = "mtry Parameter Setting", ylab = "Random Forest CV Mean Absolute Error (kg)")
+  lines(mtrySearchDT$mtry, mtrySearchDT$model_MAE)
+  #lines(dMAE)
+}
+
+
+eDT = as.data.table(cbind(modelErrors, deterministicErrors, mesqAssumptionErrors))
 melted = melt(eDT)
 dens = ggplot(data = melted, mapping = aes(x = value, color = variable)) + geom_density()
 
-meltr = melt(results, measure.vars= c("Model_Predictions", "Deterministic_Predictions"))
+#plotting predicted over actual:
+meltr = melt(results, measure.vars= c("Model_Predictions", "Deterministic_Predictions", "Mesquite_Allometry_Assumed"))
 p = ggplot(data = meltr, mapping = aes(x = Actual, y = value, color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm")
 p = p + labs(x = "AGB Reference (kg)", y = "AGB Estimate (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
 p = p + geom_abline(color = "red")
 
-#adding Actual and Fold columns to error datatable:
+
+
+# Plotting cumulative errors:
 eDT[,Actual := results[,Actual]][,Fold := results[,Fold]]
-melted2 = melt(eDT, measure.vars = c("modelErrors", "deterministicErrors"))
+melted2 = melt(eDT, measure.vars = c("modelErrors", "deterministicErrors", "mesqAssumptionErrors"))
+# this code isn't working: weird values for cumsum mesqAssumptionErrors
 c = ggplot(data = melted2, mapping = aes(x = Fold, y = cumsum(value), color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Difference from Test Data (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 
 cabs = ggplot(data = melted2, mapping = aes(x = Fold, y = cumsum(abs(value)), color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Absolute Difference from Test Data (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 
+# Making column of cumulatively summed errors:
+eDT[, cModelErrors := cumsum(modelErrors)][,cDeterministicErrors := cumsum(deterministicErrors)][,cMesqAssumptionErrors := cumsum(mesqAssumptionErrors)]
+melted3 = melt(eDT, measure.vars = c("cModelErrors", "cDeterministicErrors", "cMesqAssumptionErrors"))
+melted3[,c("modelErrors", "deterministicErrors", "mesqAssumptionErrors") := NULL]
+c2 = ggplot(data = melted3, mapping = aes(x = Fold, y = value, color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Difference from Test Data (kg)") + scale_color_hue(name = "Prediction Type", 
+                      breaks=c("cModelErrors","cDeterministicErrors", "cMesqAssumptionErrors"), 
+                      labels=c("RF Model Errors", "Ecosystem State Allometric Error", "Assumed Mesquite Allometric Error"))
+
+eDT[, cModelErrors := cumsum(abs(modelErrors))][,cDeterministicErrors := cumsum(abs(deterministicErrors))][,cMesqAssumptionErrors := cumsum(abs(mesqAssumptionErrors))]
+melted3 = melt(eDT, measure.vars = c("cModelErrors", "cDeterministicErrors", "cMesqAssumptionErrors"))
+melted3[,c("modelErrors", "deterministicErrors", "mesqAssumptionErrors") := NULL]
+c2 = ggplot(data = melted3, mapping = aes(x = Fold, y = value, color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Difference from Test Data (kg)") + scale_color_hue(name = "Prediction Type", 
+                      breaks=c("cModelErrors","cDeterministicErrors", "cMesqAssumptionErrors"), 
+                      labels=c("RF Model Errors", "Ecosystem State Allometric Error", "Assumed Mesquite Allometric Error"))
+
+p = ggplot(data = melted2, aes(x = Actual, y = abs(value), color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm")+ labs(x = "AGB Reference (kg)", y = "|Error| of AGB Estimate (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+
+p = ggplot(data = melted2, aes(x = Actual, y = value, color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm")
+
+results[,Mean_RF_EcoAllo := ((Model_Predictions + Deterministic_Predictions)/2)]
+eDT[,meanRFEcoAlloErrors := getErrors(results$Actual, results$Mean_RF_EcoAllo)]
+
+meltr = melt(results, measure.vars= c("Model_Predictions", "Deterministic_Predictions", "Mesquite_Allometry_Assumed", "Mean_RF_EcoAllo"))
+p = ggplot(data = meltr, mapping = aes(x = Actual, y = value, color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm", se = FALSE)
+p = p + labs(x = "AGB Reference (kg)", y = "AGB Estimate (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + theme(plot.title = element_text(hjust = 0.5))
+p = p + geom_abline(color = "red")
+
+# Making column of cumulatively summed errors:
+eDT[, cModelErrors := cumsum(modelErrors)][,cDeterministicErrors := cumsum(deterministicErrors)][,cMesqAssumptionErrors := cumsum(mesqAssumptionErrors)][,cMeanRFEcoAllErrors := cumsum(meanRFEcoAlloErrors)]
+melted3 = melt(eDT, measure.vars = c("cModelErrors", "cDeterministicErrors", "cMesqAssumptionErrors"))
+melted3[,c("modelErrors", "deterministicErrors", "mesqAssumptionErrors") := NULL]
+c2 = ggplot(data = melted3, mapping = aes(x = Fold, y = value, color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Difference from Test Data (kg)") + scale_color_hue(name = "Prediction Type", 
+                      breaks=c("cModelErrors","cDeterministicErrors", "cMesqAssumptionErrors"), 
+                      labels=c("RF Model Errors", "Ecosystem State Allometric Error", "Assumed Mesquite Allometric Error"))
+
+
+
 #i am here
-#now do t.test on errors to show significant reduction
+#now do t.test on errors to show significant reduction, do this on data with outlier clusters
 

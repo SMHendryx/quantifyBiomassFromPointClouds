@@ -172,20 +172,30 @@ results = crossValidate(LF, LOOCV = TRUE, biasCorrection = FALSE)
 modelErrors = getErrors(results$Actual, results$Model_Predictions)
 deterministicErrors = getErrors(results$Actual, results$Deterministic_Predictions)
 mesqAssumptionErrors = getErrors(results$Actual, results$Mesquite_Allometry_Assumed)
+RFEcoAlloErrors = getErrors(results$Actual, results$Mean_RF_EcoAllo)
 
 dRMSE = rmse(deterministicErrors)
 print(paste("deterministic RMSE = ", dRMSE))
 modelRMSE = rmse(modelErrors)
 print(paste("randomForest RMSE = ", modelRMSE))
-mesqRMSE = rmse(mesqAssumptionErrors)
-mesqRMSE
 
+mesqMAE = mae(mesqAssumptionErrors)
+mesqMAE
 dMAE = mae(deterministicErrors)
 print(paste("deterministic MAE = ", dMAE))
 modelMAE = mae(modelErrors)
 print(paste("randomForest MAE = ", modelMAE))
-mesqMAE = mae(mesqAssumptionErrors)
-mesqMAE
+RFEcoAlloMAE = mae(RFEcoAlloErrors)
+RFEcoAlloMAE
+
+errRedPercEcoAlloFromMesq = (mesqMAE - modelMAE)/mesqMAE
+print(paste("Error reduced by RF from assumed mesquite allometry: ", errRedPercEcoAlloFromMesq))
+errRedPercEcoAllo = (dMAE - modelMAE)/dMAE
+print(paste("Error reduced by RF from Ecosystem State allometry: ", errRedPercEcoAllo))
+
+errRedPercEcoAlloByMeanRFEcoAllo = (mesqMAE - RFEcoAlloMAE)/mesqMAE
+print(paste("Error reduced by mean of RF and Ecosystem State allometry: ", errRedPercEcoAlloByMeanRFEcoAllo))
+
 
 reducedPercentage = (dMAE - modelMAE)/dMAE
 reducedPercentage
@@ -280,11 +290,14 @@ p = ggplot(data = melted2, aes(x = Actual, y = value, color = variable)) + geom_
 results[,Mean_RF_EcoAllo := ((Model_Predictions + Deterministic_Predictions)/2)]
 eDT[,meanRFEcoAlloErrors := getErrors(results$Actual, results$Mean_RF_EcoAllo)]
 
+#plotting predicted over actual:
 meltr = melt(results, measure.vars= c("Model_Predictions", "Deterministic_Predictions", "Mesquite_Allometry_Assumed", "Mean_RF_EcoAllo"))
 p = ggplot(data = meltr, mapping = aes(x = Actual, y = value, color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm", se = FALSE)
 p = p + labs(x = "AGB Reference (kg)", y = "AGB Estimate (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
-p = p + geom_abline(color = "red")
+p = p + geom_abline(color = "red") + scale_color_hue(name = "Prediction Type", 
+                      breaks=c("Model_Predictions", "Deterministic_Predictions", "Mesquite_Allometry_Assumed", "Mean_RF_EcoAllo"), 
+                      labels=c("Random Forest", "Ecosystem State Allometry", "Mesquite Allometry", "Mean of RF & Ecosystem State"))
 
 # Making column of cumulatively summed errors:
 eDT[, cModelErrors := cumsum(modelErrors)][,cDeterministicErrors := cumsum(deterministicErrors)][,cMesqAssumptionErrors := cumsum(mesqAssumptionErrors)][,cMeanRFEcoAllErrors := cumsum(meanRFEcoAlloErrors)]

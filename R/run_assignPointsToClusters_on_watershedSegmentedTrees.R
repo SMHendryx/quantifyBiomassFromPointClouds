@@ -57,7 +57,7 @@ points = points[Sample_ID %in% validIDs,]
 # RUN THESIS ALGORITHMS:
 assignedPoints = assignPointsToClusters(points, clusters)
 
-write_feather(assignedPoints, "in_situ_points_with_cluster_assignments.feather")
+#write_feather(assignedPoints, "in_situ_points_with_cluster_assignments.feather")
 
 # Now run checkIfPointRepresentsMoreThanOneCluster
 #I am here:
@@ -71,6 +71,33 @@ endTime - startTime
 
 
 write.csv(assignedPoints, "in_situ_points_with_cluster_assignments.csv")
+
+#This should actually be a function in assignPointsToClusters.R
+#connecting sample_ID in assigned points with clusters, to "merge" clusters:
+# Returns a dictionary where each cluster has one to many validation points (Sample_ID)
+# The dictionary is just a list of lists
+# where the name of each entry is the Sample_ID (training and validation ID) and the entries are the IDs of the clusters (cluster_ID in assignedPoints and Label in clusters)
+sampleIDs = as.list(unique(assignedPoints[,Sample_ID]))
+clusterDict = vector(mode = "list", length= length(sampleIDs))
+names(clusterDict) = sampleIDs
+i = 1
+for(sampleID in sampleIDs){
+  clusterIDs_i = assignedPoints[Sample_ID==sampleID, cluster_ID]
+  clusterIDs_i = as.list(clusterIDs_i)
+  clusterDict[[i]] = clusterIDs_i
+  i = i + 1 
+}
+
+
+#Old:
+clusterIDs = unique(clusters[,Label])
+correspondenceIDs = assignedPoints[,correspondence_ID]
+for(coID in correspondenceIDs){
+  clusterID = assignedPoints[correspondence_ID == coID,cluster_ID]
+  sampleID = assignedPoints[correspondence_ID == coID, Sample_ID]
+  clusters[Label == clusterID, Validation_Sample_ID := ]
+}
+
 
 ################################################################################################################################################################################################################################################
 #####  PLOTS ##################################################################################################################################################################################################################################################################################################################################################################################
@@ -166,6 +193,247 @@ cbf = c(#"#000000",
   "#e26a4a",
   "#aa612f")
 
+cbf240 = c("#9367d4",
+  "#2dae15",
+  "#724fe2",
+  "#8dce23",
+  "#3f3ac2",
+  "#5ae869",
+  "#a053e1",
+  "#3cbe3a",
+  "#6f2bae",
+  "#9be04c",
+  "#9f6bf8",
+  "#61b928",
+  "#c947cd",
+  "#b3d029",
+  "#5969f0",
+  "#c6cc27",
+  "#8f1ea3",
+  "#40ca6a",
+  "#e83bbc",
+  "#359721",
+  "#b152d3",
+  "#73ae22",
+  "#b91ea2",
+  "#8edf74",
+  "#e66eec",
+  "#71c050",
+  "#5b3dac",
+  "#d7c629",
+  "#4250c2",
+  "#ecc02b",
+  "#7f73ed",
+  "#87aa23",
+  "#ba71ea",
+  "#bbd14f",
+  "#7f2d93",
+  "#57e298",
+  "#ef3ba5",
+  "#539322",
+  "#aa329c",
+  "#479e46",
+  "#ce268c",
+  "#30af6a",
+  "#f33a81",
+  "#5cdfb5",
+  "#e72525",
+  "#48e5d5",
+  "#e52740",
+  "#45dbf1",
+  "#ef4e25",
+  "#436ed7",
+  "#e9a226",
+  "#695dbf",
+  "#b7d165",
+  "#8f4ab1",
+  "#7eab3e",
+  "#f570d4",
+  "#297627",
+  "#d55bc0",
+  "#98a633",
+  "#8c7ce2",
+  "#eac252",
+  "#5c3e94",
+  "#d4c95c",
+  "#3f4b9b",
+  "#e9902b",
+  "#458ee8",
+  "#e9711f",
+  "#778aed",
+  "#c77715",
+  "#2f63ac",
+  "#cf4b15",
+  "#53a4e5",
+  "#d73a2d",
+  "#45ccbc",
+  "#e3245f",
+  "#33b18b",
+  "#a6186a",
+  "#a7d479",
+  "#872b83",
+  "#90db9e",
+  "#ae3388",
+  "#688620",
+  "#cc88ef",
+  "#37661e",
+  "#ea88e2",
+  "#596d18",
+  "#af6bcc",
+  "#b19c31",
+  "#af95f6",
+  "#d19d37",
+  "#7565b4",
+  "#7b9b47",
+  "#b85ab2",
+  "#6cba7d",
+  "#b61e5c",
+  "#4cbe9e",
+  "#ad2716",
+  "#6ed7d8",
+  "#c12f39",
+  "#38b4be",
+  "#f35656",
+  "#298e5f",
+  "#e15890",
+  "#b8d88d",
+  "#8d2973",
+  "#95bc75",
+  "#763174",
+  "#dec775",
+  "#334a84",
+  "#eb8d4a",
+  "#367bbb",
+  "#f56d4a",
+  "#68c3ef",
+  "#d85537",
+  "#41a7c5",
+  "#ab4c0e",
+  "#89cce7",
+  "#c62f4d",
+  "#379e93",
+  "#e45a75",
+  "#93d8bf",
+  "#941b38",
+  "#96d4d4",
+  "#912320",
+  "#a2bcf2",
+  "#d97236",
+  "#15729c",
+  "#e77852",
+  "#154975",
+  "#f0b66e",
+  "#a181d7",
+  "#7e7318",
+  "#e89ff0",
+  "#415a1f",
+  "#ea80ca",
+  "#326034",
+  "#ce5da7",
+  "#769e5d",
+  "#bd4383",
+  "#569160",
+  "#932764",
+  "#afb46a",
+  "#8c559d",
+  "#938b34",
+  "#8f8dd9",
+  "#b08028",
+  "#5d4480",
+  "#ce883c",
+  "#3585b0",
+  "#a23e1d",
+  "#5e9abd",
+  "#87370d",
+  "#939cdc",
+  "#9d621e",
+  "#c2aff0",
+  "#616117",
+  "#e7b1f1",
+  "#4c501a",
+  "#e89ddb",
+  "#618042",
+  "#b66eb7",
+  "#b49c55",
+  "#b386cd",
+  "#64531b",
+  "#cc7fc4",
+  "#326b50",
+  "#ee76aa",
+  "#2e543c",
+  "#ef7971",
+  "#145a6a",
+  "#e98e5d",
+  "#3b5b8b",
+  "#b75f30",
+  "#6777b3",
+  "#cd9659",
+  "#7f6daa",
+  "#c3d09f",
+  "#972554",
+  "#7cb89b",
+  "#ba3f4c",
+  "#448e99",
+  "#c95449",
+  "#34758f",
+  "#a84535",
+  "#b1c8eb",
+  "#7a4618",
+  "#dec6f1",
+  "#6b6e37",
+  "#94548c",
+  "#93ac80",
+  "#b94365",
+  "#588f74",
+  "#a14e7c",
+  "#607f54",
+  "#df90bb",
+  "#20554c",
+  "#ed93ac",
+  "#35776f",
+  "#bc5857",
+  "#75afaa",
+  "#92353d",
+  "#7090bb",
+  "#863c2c",
+  "#9ea2c8",
+  "#8a632f",
+  "#bfa0d0",
+  "#806d35",
+  "#ab7fb1",
+  "#9a7d42",
+  "#54739a",
+  "#ee9f81",
+  "#485172",
+  "#e3c18f",
+  "#79345d",
+  "#ddc7a5",
+  "#66426a",
+  "#8d9260",
+  "#bd739c",
+  "#504e2d",
+  "#dfacce",
+  "#724b31",
+  "#f0b8c3",
+  "#7e3443",
+  "#b79c6e",
+  "#93577c",
+  "#6e6c49",
+  "#ba6882",
+  "#e0ae95",
+  "#777399",
+  "#c27c54",
+  "#886587",
+  "#a25f48",
+  "#bc899c",
+  "#a38366",
+  "#92465f",
+  "#da9896",
+  "#7d4f55",
+  "#d27a78",
+  "#af796f",
+  "#b25e68")
+
 # Plot only those points inside threshold:
 #organize data to be rbinded:
 #first remove unnecessary points from assigned and thresholded Points:
@@ -185,8 +453,11 @@ minY = min(plotDT[,Y])
 assignedPoints = assignedPoints[X < maxX & X > minX & Y < maxY & Y > minY]
 
 
+#plotting XY cluster-points and assigned points within threshold
 renderStartTime = Sys.time()
-ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + scale_colour_manual(values = cbf) 
+ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + scale_colour_manual(values = cbf240) + coord_equal()
+ggp = ggp + geom_point(data = assignedPoints[closest_cluster_outside_threshold == FALSE,], mapping = aes(x = X, y = Y), shape = 8)
+ggp
 #testing adding assigned_to_point column to clusters:
 #ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(assigned_to_point)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + scale_colour_manual(values = cbf) 
 

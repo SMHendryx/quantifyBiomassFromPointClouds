@@ -187,19 +187,33 @@ print(paste("Error reduced by RF from assumed mesquite allometry: ", errRedPercE
 errRedPercEcoAllo = (dMAE - modelMAE)/dMAE
 print(paste("Error reduced by RF from Ecosystem State allometry: ", errRedPercEcoAllo))
 
-errRedPercEcoAlloByMeanRFEcoAllo = (mesqMAE - RFEcoAlloErrors)/mesqMAE
+errRedPercEcoAlloByMeanRFEcoAllo = (mesqMAE - RFEcoAlloMAE)/mesqMAE
 print(paste("Error reduced by mean of RF and Ecosystem State allometry: ", errRedPercEcoAlloByMeanRFEcoAllo))
 
-
-eDT = as.data.table(cbind(modelErrors, deterministicErrors))
+#density plot of errors:
+eDT = as.data.table(cbind(modelErrors, deterministicErrors, mesqAssumptionErrors, RFEcoAlloErrors))
 melted = melt(eDT)
 dens = ggplot(data = melted, mapping = aes(x = value, color = variable)) + geom_density()
 
-meltr = melt(results, measure.vars= c("Model_Predictions", "Deterministic_Predictions"))
-p = ggplot(data = meltr, mapping = aes(x = Actual, y = value, color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm")
+#plotting predicted over actual:
+meltr = melt(results, measure.vars= c("Model_Predictions", "Deterministic_Predictions", "Mesquite_Allometry_Assumed", "Mean_RF_EcoAllo"))
+p = ggplot(data = meltr, mapping = aes(x = Actual, y = value, color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm", se = FALSE)
 p = p + labs(x = "AGB Reference (kg)", y = "AGB Estimate (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
-p = p + geom_abline(color = "red")
+p = p + geom_abline(color = "red") + scale_color_hue(name = "Prediction Type", 
+                      breaks=c("Model_Predictions", "Deterministic_Predictions", "Mesquite_Allometry_Assumed", "Mean_RF_EcoAllo"), 
+                      labels=c("Random Forest", "Ecosystem State Allometry", "Mesquite Allometry", "Mean of RF & Ecosystem State"))
+
+# Making column of cumulatively summed errors:
+eDT[, cModelErrors := cumsum(modelErrors)][,cDeterministicErrors := cumsum(deterministicErrors)][,cMesqAssumptionErrors := cumsum(mesqAssumptionErrors)][,cMeanRFEcoAllErrors := cumsum(RFEcoAlloErrors)]
+#adding Fold index:
+eDT[,Actual := results[,Actual]][,Fold := results[,Fold]]
+melted3 = melt(eDT, measure.vars = c("cModelErrors", "cDeterministicErrors", "cMesqAssumptionErrors", "cMeanRFEcoAllErrors"))
+melted3[,c("modelErrors", "deterministicErrors", "mesqAssumptionErrors") := NULL]
+c3 = ggplot(data = melted3, mapping = aes(x = Fold, y = value, color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Difference from Test Data (kg)") + scale_color_hue(name = "Prediction Type", 
+                      breaks=c("cModelErrors","cDeterministicErrors", "cMesqAssumptionErrors", "cMeanRFEcoAllErrors"), 
+                      labels=c("RF Model Errors", "Ecosystem State Allometric Error", "Assumed Mesquite Allometric Error", "Mean of RF & Ecosystem State"))
+
 
 #adding Actual and Fold columns to error datatable:
 eDT[,Actual := results[,Actual]][,Fold := results[,Fold]]
@@ -210,4 +224,5 @@ cabs = ggplot(data = melted2, mapping = aes(x = Fold, y = cumsum(abs(value)), co
 
 #i am here
 #now do t.test on errors to show significant reduction
+t.test(abs(mesqAssumptionErrors), abs(RFEcoAlloErrors))
 

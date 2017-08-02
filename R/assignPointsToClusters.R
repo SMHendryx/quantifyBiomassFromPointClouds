@@ -102,7 +102,7 @@ thresholdPoints <- function(points, thresholdType = "dominateMode", buffer = 10,
 }
 
 # vectorized:
-assignPointsToClusters <- function(points, clusters, x_col_name = 'X', y_col_name = 'Y', cluster_ID_col_name = 'Label', thresholdType = "dominateMode", buffer = 10){
+assignPointsToExistingClusters <- assignPointsToClusters <- function(points, clusters, x_col_name = 'X', y_col_name = 'Y', cluster_ID_col_name = 'Label', thresholdType = "dominateMode", buffer = 10){
   # Algorithm assigns points, in a dataset $\bf{P}$, to the closet cluster in another dataset, $\bf{C}$,
   # flags unlikely correspondences based on distance threshold,
   # and then determines if any other clusters should be assigned to that point based on information held in the point.
@@ -236,9 +236,9 @@ testAndMergeClustersRecursively <- function(predictedCentroid, pointID, assigned
     stop("radius does not exist.  Make sure all points have a radius value.")
   }
   
+  #These two lines of code could only be run once and the data stored to make run faster.  i.e. compute unassigned labels, compute unassigned centroids => store unassigned centroids => remove unassigned centroid if the centroid becomes assigned.
   # Compute remaining unassigned cluster labels:
   unassignedClusterLabels = unique(clusters[is.na(assigned_to_point), Label])
-  
   # Compute unassignedClusterCentroids:
   unassignedClusterCentroids = computeUnassignedClusterCentroids(clusters)
   
@@ -256,7 +256,7 @@ testAndMergeClustersRecursively <- function(predictedCentroid, pointID, assigned
     #printer("center_y: ", center_y)
     #printer("radius: ", radius)
     if (testIfPointWithinCircle(x = x, center_x = center_x, y = y, center_y = center_y, radius = radius)){
-      print(paste0("Cluster centroid falls within radius."))
+      print(paste0("Cluster centroid falls within radius.  Cluster Label: ", unassignedClusterLabel))
       #if unassigned cluster centroid within minor_axis radius of assigned centroid,
       # assign point to cluster:
       clusters[Label == unassignedClusterLabel, assigned_to_point := assignedPoints[Sample_ID == pointID, Sample_ID]]
@@ -356,7 +356,42 @@ checkIfPointRepresentsMoreThanOneCluster <- function(assignedPoints, clusters){
     
     assignedPoints = testAndMergeClustersRecursively(predictedCentroid = predictedCentroid, pointID = pointID, assignedPoints = assignedPoints, clusters = clusters)
   }
-  # instead of returning clusters, add list of cluster_IDs column to assignedPoints:
+  #remove duplicate rows:
+  assignedPoints = unique(assignedPoints)
+  # instead of returning clusters, add list of cluster_IDs column to assignedPoints and return assignedPoints:
   return(assignedPoints)
+}
+
+
+
+buildClusterDict <- function(assignedPoints, evalOutsideThreshold = FALSE){
+  # Returns a dictionary where each sample ID (point) represents one to many clusters
+  # takes in a datatable that has been run through assignPointsToExistingClusters(...) and checkIfPointRepresentsMoreThanOneCluster(...)
+  # The dictionary is just a list of lists
+  # where the name of each entry is the Sample_ID (training and validation ID) and the entries are the IDs of the clusters (cluster_ID in assignedPoints and Label in clusters)
+  sampleIDs = as.list(unique(assignedPoints[closest_cluster_outside_threshold == evalOutsideThreshold,Sample_ID]))
+  clusterDict = vector(mode = "list", length= length(sampleIDs))
+  names(clusterDict) = sampleIDs
+  i = 1
+  for(sampleID in sampleIDs){
+    clusterIDs_i = assignedPoints[Sample_ID==sampleID, cluster_ID]
+    clusterIDs_i = as.list(clusterIDs_i)
+    clusterDict[[i]] = clusterIDs_i
+    i = i + 1 
+  }
+  return(clusterDict)
+}
+
+assignMergedIDsToClusters <- function(clusterDict, clusters){
+  # Function assigns a new ID of merged clusters to clusters datatable
+  # Run after buildClusterDict(...)
+  clusters = copy(clusters)
+  #note that pointID and sampleID (in points) represent the same thing in this code base
+  pointIDs = names(clusterDict)
+  for(pointID in pointIDs){
+    entry = clusterDict[pointID]
+    clusters[Label %in% entry[[1]],mergedClusterID := pointID]
+  }
+  return(clusters)
 }
 

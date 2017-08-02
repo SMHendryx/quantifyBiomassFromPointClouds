@@ -70,34 +70,14 @@ endTime - startTime
 
 
 
-write.csv(assignedPoints, "in_situ_points_with_cluster_assignments.csv")
+#write.csv(assignedPoints, "in_situ_points_with_cluster_assignments.csv")
 
-#This should actually be a function in assignPointsToClusters.R
-#connecting sample_ID in assigned points with clusters, to "merge" clusters:
-# Returns a dictionary where each cluster has one to many validation points (Sample_ID)
-# The dictionary is just a list of lists
-# where the name of each entry is the Sample_ID (training and validation ID) and the entries are the IDs of the clusters (cluster_ID in assignedPoints and Label in clusters)
-sampleIDs = as.list(unique(assignedPoints[,Sample_ID]))
-clusterDict = vector(mode = "list", length= length(sampleIDs))
-names(clusterDict) = sampleIDs
-i = 1
-for(sampleID in sampleIDs){
-  clusterIDs_i = assignedPoints[Sample_ID==sampleID, cluster_ID]
-  clusterIDs_i = as.list(clusterIDs_i)
-  clusterDict[[i]] = clusterIDs_i
-  i = i + 1 
-}
+#get cluster dictionary for points:
+clusterDict = buildClusterDict(assignedPoints)
 
+clusters = assignMergedIDsToClusters(clusterDict, clusters)
 
-#Old:
-clusterIDs = unique(clusters[,Label])
-correspondenceIDs = assignedPoints[,correspondence_ID]
-for(coID in correspondenceIDs){
-  clusterID = assignedPoints[correspondence_ID == coID,cluster_ID]
-  sampleID = assignedPoints[correspondence_ID == coID, Sample_ID]
-  clusters[Label == clusterID, Validation_Sample_ID := ]
-}
-
+#Next re-extract cluster metrics with merged cluster IDs
 
 ################################################################################################################################################################################################################################################
 #####  PLOTS ##################################################################################################################################################################################################################################################################################################################################################################################
@@ -462,6 +442,15 @@ ggp
 #ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(assigned_to_point)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + scale_colour_manual(values = cbf) 
 
 #PLOTTING ONLY THOSE POINTS THAT REPRESENT CLUSTERS WHICH HAVE BEEN MERGED:
+#plotting XY cluster-points and assigned points within threshold
+renderStartTime = Sys.time()
+ggp = ggplot() + geom_point(data = plotDT,mapping = aes(x = X, y = Y, color = factor(mergedClusterID)), size = .75) + theme_bw() + theme(legend.position="none") + scale_colour_manual(values = cbf240) + coord_equal()
+ggp = ggp + geom_point(data = assignedPoints, mapping = aes(x = X, y = Y), shape = 8)
+ggp
+#testing adding assigned_to_point column to clusters:
+#ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(assigned_to_point)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + scale_colour_manual(values = cbf) 
+
+
 ggp = ggp + geom_point(data = assignedPoints[closest_cluster_outside_threshold == FALSE & merged == TRUE,], mapping = aes(x = X, y = Y), shape = 8)
 #ggp = ggp + geom_point(data = assignedPoints[closest_cluster_outside_threshold == FALSE,], mapping = aes(x = X_closest_cluster_centroid, y = Y_closest_cluster_centroid), shape = 13)
 ggp

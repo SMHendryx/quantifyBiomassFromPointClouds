@@ -6,14 +6,15 @@ library(data.table)
 library(ggplot2)
 library(plotly)
 
-#Define functions:
-rmse = function(errors){
-  return(sqrt(mean(errors^2)))
-}
 
 # To compute RMSE, first get errors:
 getErrors = function(measured, predicted){
   return(measured - predicted)
+}
+
+#Define functions:
+rmse = function(errors){
+  return(sqrt(mean(errors^2)))
 }
 
 
@@ -25,6 +26,7 @@ DT = as.data.table(read_feather("cluster_features.feather"))
 # Tree column is the cluster label (points$cluster_ID)
 # Convert it to cluster_ID:
 setnames(DT, "Tree", "Cluster_ID")
+# ^ should already have been done in extractFeatures.R.  "Tree" is the output column from watershed segmentation in lidR
 
 numColsToSave = ncol(DT) - 29
 cols = names(DT)[1:numColsToSave]
@@ -220,6 +222,23 @@ text = paste("RMSE == ", RMSE)
 p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
 
+ply = ggplotly(p)
+ply
+
+# Same as last but with colored points. using ecosystem allometry:
+RMSE = rmse(errors)
+p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = ecoAllom_AGB_cluster_measurements)) + geom_point(mapping = aes(color = Cluster_ID),size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
+p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions & Ecosystem-State Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + theme(plot.title = element_text(hjust = 0.5))
+#m = lm(LF[,ecoAllom_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
+#r2 = format(summary(m)$r.squared, digits = 3)
+#text = paste("r^2 == ", r2)
+text = paste("RMSE == ", RMSE)
+p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
+p = p + geom_abline(color = "red")
+
+ply = ggplotly(p)
+ply
 
 
 

@@ -4,7 +4,10 @@
 # File paths currently hardcoded inside scripts
 
 
-# First, decimate the point cloud if very dense:
+# First, clip point cloud to study area if necessary:
+Rscript clipPointCloudsToStudyArea.R
+
+#decimate the point cloud if very dense:
 Rscript decimate_PointClouds.R
 
 # Then tile the point cloud:
@@ -16,20 +19,20 @@ Rscript run_tileR.R
 #Here: write bash script to cp all original tiles that were not MCC-Lidared into new directory called "notSuccessfullyGroundClassifedByMCC"
 
 # Merge now-classified tiles back together:
-mergeTiles.R
+Rscript mergeTiles.R
 
 # Cluster points, via watershed, OPTICS, etc.:
 # use OPTICS to identify outliers:
-run_OPTICS.R
-remove_OPTICS_outliers.R
+Rscript run_OPTICS.R
+Rscript remove_OPTICS_outliers.R
 # then run watershed on point cloud that doesn't have outliers:
-watershedSegmentTrees.R
+Rscript watershedSegmentTrees.R
 
 # set up training and validation data:
 Rscript assignPointsToClusters.R
 
 # Compute biomass of in situ data:
-computeBiomass.R
+Rscript computeBiomass.R
 
 # Extract Features:
 Rscript extractFeatures.R

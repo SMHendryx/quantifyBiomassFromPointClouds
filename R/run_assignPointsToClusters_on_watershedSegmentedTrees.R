@@ -77,6 +77,8 @@ clusterDict = buildClusterDict(assignedPoints)
 
 clusters = assignMergedIDsToClusters(clusterDict, clusters)
 
+write_feather(clusters, "mergedClusters/all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation_and_Merged.feather")
+
 #Next re-extract cluster metrics with merged cluster IDs
 
 ################################################################################################################################################################################################################################################
@@ -445,7 +447,7 @@ ggp
 #plotting XY cluster-points and assigned points within threshold
 renderStartTime = Sys.time()
 ggp = ggplot() + geom_point(data = plotDT,mapping = aes(x = X, y = Y, color = factor(mergedClusterID)), size = .75) + theme_bw() + theme(legend.position="none") + scale_colour_manual(values = cbf240) + coord_equal()
-ggp = ggp + geom_point(data = assignedPoints, mapping = aes(x = X, y = Y), shape = 8)
+ggp = ggp + geom_point(data = assignedPoints[closest_cluster_outside_threshold == FALSE,], mapping = aes(x = X, y = Y), shape = 8)
 ggp
 #testing adding assigned_to_point column to clusters:
 #ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(assigned_to_point)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + scale_colour_manual(values = cbf) 

@@ -8,11 +8,11 @@ library(ggplot2)
 
 discardIntensity = TRUE
 
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers/")
 
 # Read in data:
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather"))
+clusters = as.data.table(read_feather("mergedClusters/all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation_and_Merged.feather"))
 #colnames(clusters)[1] = 'X'
 
 '%!in%' = function(x,y)!('%in%'(x,y))
@@ -22,9 +22,12 @@ if("Intensity" %!in% colnames(clusters)){
   clusters[,Intensity := numeric()]
 }
 
+#Trying making clusters$mergedClusterID into numeric:
+clusters[,mergedClusterID := as.numeric(mergedClusterID)]
+
 #redefining rLiDAR's crownMetrics to allow for NAs in Intensity since not all point clouds have intensity (also extended default precision to 5 decimal places):
 source("~/githublocal/quantifyBiomassFromPointClouds/R/CrownMetrics.R")
-metrics = CrownMetrics(as.matrix(clusters[,.(X,Y,Z,Intensity, treeID)]), na_rm = TRUE, digits = 5)
+metrics = CrownMetrics(as.matrix(clusters[!is.na(mergedClusterID),.(X,Y,Z,Intensity, mergedClusterID)]), na_rm = TRUE, digits = 5)
 
 DT = as.data.table(metrics)
 
@@ -68,5 +71,5 @@ LF = unique(LF)
 
 #write to disk:
 # Tree column is the cluster label
-write_feather(LF, "cluster_features_with_label.feather")
-write.csv(LF, "cluster_features_with_label.csv")
+write_feather(LF, "mergedClusters/cluster_features_with_label.feather")
+write.csv(LF, "mergedClusters/cluster_features_with_label.csv")

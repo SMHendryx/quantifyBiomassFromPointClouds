@@ -7,11 +7,11 @@
 # First, clip point cloud to study area if necessary:
 Rscript clipPointCloudsToStudyArea.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las 
 
-#decimate the point cloud if very dense: ( i am here: check if very dense/many points)
-Rscript decimate_PointClouds.R
+#decimate the point cloud if very dense:
+Rscript decimate_PointClouds.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las
 
-# Then tile the point cloud:
-Rscript run_tileR.R
+# Then tile the point cloud: (I am here)
+Rscript run_tileR.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/tiles /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/Decimated_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las
 
 # Classify ground points:
 ./run_MCC_Lidar.sh

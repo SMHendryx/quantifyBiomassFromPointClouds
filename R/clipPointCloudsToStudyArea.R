@@ -1,12 +1,12 @@
-# plotCHM.R
+# Clips point cloud to only those points INSIDE shapefile
 # Clear workspace:
 rm(list=ls())
 library(lidR) 
 library(data.table) 
 library(raster) 
 library(rgeos)
-#detach("package:rLiDAR", unload=TRUE)
-#library(ggplot2)
+
+
 
 args = commandArgs(trailingOnly = TRUE)
 #args should be 1. directory, 2. input las file to clip, and 3. whether or not to plot

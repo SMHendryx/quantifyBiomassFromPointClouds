@@ -5,9 +5,9 @@
 
 
 # First, clip point cloud to study area if necessary:
-Rscript clipPointCloudsToStudyArea.R
+Rscript clipPointCloudsToStudyArea.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las 
 
-#decimate the point cloud if very dense:
+#decimate the point cloud if very dense: ( i am here: check if very dense/many points)
 Rscript decimate_PointClouds.R
 
 # Then tile the point cloud:

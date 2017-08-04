@@ -7,7 +7,6 @@ library(raster)
 library(rgeos)
 
 
-
 args = commandArgs(trailingOnly = TRUE)
 #args should be 1. directory, 2. input las file to clip, and 3. whether or not to plot
 

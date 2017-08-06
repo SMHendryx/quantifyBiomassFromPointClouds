@@ -6,6 +6,7 @@ library(data.table)
 library(ggplot2)
 library(plotly)
 
+
 #getdata:
 setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
 

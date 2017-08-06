@@ -12,6 +12,8 @@ if (length(args)== 1) {
 } else if (length(args)==2) {
   args[3] = FALSE
   args[4] = TRUE
+} else if(length(args ==3)){
+  args[4] = TRUE
 }
 
 directoryPath = args[1]

@@ -76,6 +76,7 @@ writeLAS(nonground, "GreaterThan1mHAG/SfM_nonground_points.las")
 
 # Get csv
 ngPoints = nonground@data
-
+write.csv(ngPoints, "GreaterThan1mHAG/SfM_nonground_points.csv")
+write_feather(ngPoints, "GreaterThan1mHAG/SfM_nonground_points.feather")
 
 

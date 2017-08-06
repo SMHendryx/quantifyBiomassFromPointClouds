@@ -10,6 +10,7 @@ import sys
 import time
 # OPTICS needs to be installed from sklearn espg fork
 from sklearn.cluster import OPTICS
+import feather
 
 #ARGUMENTS CURRENTLY HARDCODED:
 # SHOULD BE INPUT AS:
@@ -20,11 +21,21 @@ filePath = arguments[1]
 eps = float(arguments[3])
 minNumSamples = int(arguments[5])
 
-#read in point cloud file in csv
-inFile = np.genfromtxt(filePath, delimiter=',', skip_header=1)
+filePath = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/GreaterThan1mHAG/SfM_nonground_points.feather"
+data = feather.read_dataframe(filePath)
+# pandas get X,Y,Z:
+df = data[['X','Y', 'Z']]
 
+#convert to numpy array:
+X = df.values
+
+# or with csv:
+#read in point cloud file in csv
+#filePath = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/GreaterThan1mHAG/SfM_nonground_points.csv"
+#inFile = np.genfromtxt(filePath, delimiter=',', skip_header=1)
 #nonGround_coords:
-X = inFile[:,1:4]
+# ASSUMES 1ST COLUMN IS ROW NAME:
+#X = inFile[:,1:4]
  
 startTime = time.time()
 

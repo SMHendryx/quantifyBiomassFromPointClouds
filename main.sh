@@ -45,16 +45,16 @@ Rscript extractNonGroundPoints.R
 # use OPTICS to identify outliers:
 python run_OPTICS.py
 Rscript remove_OPTICS_outliers.R
-# then run watershed on point cloud that doesn't have outliers:(i am here!!!)
+# then run watershed on point cloud that doesn't have outliers:
 Rscript watershedSegmentTrees.R
 
-# set up training and validation data:
+# set up training and validation data:(i am here!!!)
 Rscript assignPointsToClusters.R
 
 # Compute biomass of in situ data:
-Rscript computeBiomass.R
+Rscript computeBiomass.R /Users/seanhendryx/Data/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/
 
-# Extract Features:
+# Extract Features: (I am here)
 Rscript extractFeatures.R
 #Connect cluster features and biomass:
 Rscript correspondWatershedClusters

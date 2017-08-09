@@ -376,15 +376,17 @@ plotClustersWPoints = function(assignedPoints, clusters){
   return(ggp)
 }
 
+#make plots:
 buffers = c(Inf, 10,9,8, 7.5,7,6, 5, 4, 3,2.7, 2.5,2.25, 2,1.75, 1.5,1.25, 1)
 numPoints = list()
 plots = list()
 i = 1
 for(buff in buffers){
   assignedPoints = assignPointsToExistingClusters(points, clusters, buffer = buff)
-  numPoints_i = nrow(assignedPoints[closest_cluster_outside_threshold==FALSE])
-  numPoints[[i]] = numPoints_i
-  
+  if(buff != Inf){
+    numPoints_i = nrow(assignedPoints[closest_cluster_outside_threshold==FALSE])
+    numPoints[[i]] = numPoints_i
+  }
   plots[[i]] = plotClustersWPoints(assignedPoints, clusters)
   i = i +1
 }
@@ -400,7 +402,56 @@ for(buff in buffers){
   i = i + 1
 }
 #write_feather(assignedPoints, "in_situ_points_with_cluster_assignments.feather")
-plot(buffers, numPoints, )
+
+#remove Inf buff for plotting numPoints over buffer multiplier
+buffers[[1]] = NULL
+
+
+i = 1
+for(buff in buffers){
+  #change symbol for each point:
+  syms = rep(1, length(buffers))
+  syms[[i]] = 19
+  path = paste0("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/thresholdParamTests/pngs/",buff,"_numPointsOverBuffer.png")
+  png(path)
+  plot(buffers, numPoints, pch = syms, xlab = "Buffer Multiplier", ylab = "Number of In Situ Points within Threshold")  
+  dev.off()
+  i = i + 1
+}
+
+#make density plots:
+closestPoints = assignedPoints[,.SD[which.min(distance_to_closest_cluster_member)], by = cluster_ID]
+plots = list()
+i = 1
+for(buff in buffers){
+  #Plotting density threshold:
+  g = ggplot(data = closestPoints, mapping = aes(x = distance_to_closest_cluster_member)) + geom_density() + theme_bw() + labs(x = "Distance to Closest Cluster Member")
+  dMode = dmode(closestPoints$distance_to_closest_cluster_member)
+  g = g + geom_vline(xintercept = dMode, linetype="dotted", color = "blue") + geom_vline(xintercept = buff * dMode,color = "red")
+  
+  plots[[i]] = g
+  i = i +1
+}
+
+#Save plots:
+i = 1
+for(buff in buffers){
+  path = paste0("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/thresholdParamTests/pngs/",buff,"_density_with_buffer_lines.png")
+  png(path)
+  print(plots[[i]])
+  dev.off()
+  print(paste0("Saved plot ", i))
+  i = i + 1
+}
+
+buff = "Inf"
+path = paste0("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/thresholdParamTests/pngs/",buff,"_density_with_buffer_lines.png")
+png(path)
+g = ggplot(data = closestPoints, mapping = aes(x = distance_to_closest_cluster_member)) + geom_density() + theme_bw() + labs(x = "Distance to Closest Cluster Member")
+dMode = dmode(closestPoints$distance_to_closest_cluster_member)
+g = g + geom_vline(xintercept = dMode, linetype="dotted", color = "blue")
+print(g)
+dev.off()
 
 # Now run checkIfPointRepresentsMoreThanOneCluster
 #I am here:
@@ -414,7 +465,7 @@ endTime - startTime
 
 #Plotting density threshold:
 closestPoints = assignedPoints[,.SD[which.min(distance_to_closest_cluster_member)], by = cluster_ID]
-g = ggplot(data = closestPoints, mapping = aes(x = distance_to_closest_cluster_member)) + geom_density() + theme_bw()
+g = ggplot(data = closestPoints, mapping = aes(x = distance_to_closest_cluster_member)) + geom_density() + theme_bw() + labs(x = "Distance to Closest Cluster Member")
 dMode = dmode(closestPoints$distance_to_closest_cluster_member)
 g = g + geom_vline(xintercept = dMode, linetype="dotted", 
                 color = "blue") + geom_vline(xintercept = buff * dMode,color = "red")

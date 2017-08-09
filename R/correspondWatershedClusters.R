@@ -1,4 +1,4 @@
-# Trains a real-valued prediction model
+# Code to make plots to investigate differing methods of quantifying biomass.
 
 library(feather)
 library(lidR)
@@ -14,7 +14,7 @@ getErrors = function(measured, predicted){
 
 #Define functions:
 rmse = function(errors){
-  return(sqrt(mean(errors^2, na.rm = TRUE), na.rm = TRUE))
+  return(sqrt(mean(errors^2)))
 }
 
 mae = function(errors){
@@ -22,18 +22,15 @@ mae = function(errors){
 }
 
 #getdata:
-setwd("/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/")
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area")
 #setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
 #DT of features:
 DT = as.data.table(read_feather("cluster_features_with_label.feather"))
 # Tree column is the cluster label (points$cluster_ID)
 # Convert it to cluster_ID:
-setnames(DT, "Tree", "Cluster_ID")
+#setnames(DT, "Tree", "Cluster_ID")
 # ^ should already have been done in extractFeatures.R.  "Tree" is the output column from watershed segmentation in lidR
 
-numColsToSave = ncol(DT) - 29
-cols = names(DT)[1:numColsToSave]
-DT = DT[,.SD, .SDcols = cols]
 
 # read in points (labeled data):
 points = as.data.table(read_feather("in_situ_biomass_points_with_cluster_assignments.feather"))
@@ -91,6 +88,15 @@ LF[,assume_hack_AGB_cluster_measurements := hackAllom(Cluster_CA)]
 #vs ecosystem-state allometric equation computed using cross-validation and data generated from the measured species distribution
 LF[,ecoAllom_AGB_cluster_measurements := ecoAllom(Cluster_CA)]
 
+
+
+
+
+LF = LF[!is.na(in_situ_AGB_summed_by_cluster)]
+
+
+
+#PLOTTING
 #make plot of differing assumed species:
 assumeSpecDT = LF[,.(assume_mesq_AGB_cluster_measurements, assume_hack_AGB_cluster_measurements, ecoAllom_AGB_cluster_measurements, Cluster_CA)]
 melted = melt(assumeSpecDT, measure.vars = c("assume_mesq_AGB_cluster_measurements", "assume_hack_AGB_cluster_measurements", "ecoAllom_AGB_cluster_measurements"), value.name = "Estimated_AGB")
@@ -129,15 +135,15 @@ LF[,Cluster_ID := as.factor(Cluster_ID)]
 # when we don't specify the species of the allometric equation
 #first compute RMSE:
 errors = getErrors(LF$cluster_measurements_AGB, LF$AGB)
-RMSE = rmse(errors)
+MAE = mae(errors)
 p = ggplot(data = LF, mapping = aes(x = AGB,y = cluster_measurements_AGB)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
 p = p + labs(x = "In Situ AGB of Individual Trees(kg)", y = "AGB Estimated from Cluster Dimensions (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
 m = lm(LF[,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,AGB])
 #r2 = format(summary(m)$r.squared, digits = 3)
 #text = paste("r^2 == ", r2)
-text = paste("RMSE == ", RMSE)
-p = p + annotate("text",x = 275, y = 2750, label = text, parse = TRUE)
+text = paste("MAE == ", MAE)
+p = p + annotate("text",x = 450, y = 250, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
 
 #specifying mesquite allometric eqn:
@@ -147,21 +153,21 @@ p = p + theme(plot.title = element_text(hjust = 0.5))
 m = lm(LF[,assume_mesq_AGB_cluster_measurements] ~ LF[,AGB])
 r2 = format(summary(m)$r.squared, digits = 3)
 text = paste("r^2=", r2)
-p = p + annotate("text",x = 275, y = 2750, label = text, parse = TRUE)
+p = p + annotate("text",x = 275, y = 200, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
 
 
 # and now plotting summed in situ mass by cluster, coloring by species to show the variance in prediction:
-errors = getErrors(LF$cluster_measurements_AGB, LF$AGB)
-RMSE = rmse(errors)
+errors = getErrors(LF$cluster_measurements_AGB, LF$in_situ_AGB_summed_by_cluster)
+MAE = mae(errors)
 p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = cluster_measurements_AGB)) + geom_point(mapping = aes(color = Species), size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE)# + guides(color=FALSE) #guides(fill=FALSE) removes legend
 p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
 m = lm(LF[,cluster_measurements_AGB] ~ LF[closest_cluster_outside_threshold==FALSE ,in_situ_AGB_summed_by_cluster])
 #r2 = format(summary(m)$r.squared, digits = 3)
 #text = paste("r^2 == ", r2)
-text = paste("RMSE == ", RMSE)
-p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
+text = paste("MAE == ", MAE)
+p = p + annotate("text",x = 370, y = 300, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
 
 
@@ -223,7 +229,7 @@ p = p + theme(plot.title = element_text(hjust = 0.5))
 #r2 = format(summary(m)$r.squared, digits = 3)
 #text = paste("r^2 == ", r2)
 text = paste("MAE == ", MAE)
-p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
+p = p + annotate("text",x = 350, y = 250, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
 
 ply = ggplotly(p)

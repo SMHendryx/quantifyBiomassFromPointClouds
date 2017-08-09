@@ -7,15 +7,19 @@
 # First, clip point cloud to study area if necessary:
 Rscript clipPointCloudsToStudyArea.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las 
 
-#decimate the point cloud if very dense:
-Rscript decimate_PointClouds.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las
+#(I am here)
+#decimate the point cloud if very dense: (what is "very dense"?)
+#Rscript decimate_PointClouds.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las
+#only 256k points so let's try w/o decimation
 
-Rscript removeGroundPoints.R 
+#Plus, it's already ground classed
+
+#Rscript removeGroundPoints.R 
 
 # Then tile the point cloud: 
 Rscript run_tileR.R /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/tiles/ /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/groundPointsRemoved_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las
 
-# Classify ground points: (I am here)
+# Classify ground points: 
 # manually move files to cyberduck, then:
 ./move_tiles_to_Jetstream_from_Cyberduck.sh
 ./run_MCC_Lidar_on_Jetstream.sh
@@ -34,14 +38,14 @@ cp mcc-s_point20_-t_point05/tiles/*.las all_tiles
 Rscript mergeTiles.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/all_tiles/ /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/belowGroundPointsRemoved_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las TRUE
 Rscript mergeTiles.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/PMF/tiles/ /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/belowGroundPointsRemoved_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las TRUE
 
-# Get nonground points 1m or greater height above ground:
+# Get nonground points 1m or greater height above ground: 
 Rscript extractNonGroundPoints.R
 
 # Cluster points, via watershed, OPTICS, etc.:
 # use OPTICS to identify outliers:
 python run_OPTICS.py
 Rscript remove_OPTICS_outliers.R
-# then run watershed on point cloud that doesn't have outliers:
+# then run watershed on point cloud that doesn't have outliers:(i am here!!!)
 Rscript watershedSegmentTrees.R
 
 # set up training and validation data:

@@ -35,12 +35,10 @@ source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/R/assignPo
 
 
 #Run
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
-# start R in directory:
-# cd /Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified
+setwd("/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/")
 
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather"))
+clusters = as.data.table(read_feather("SfM_allTilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather"))
 # add column named "Label", since that is what assignPointsToClusters is looking for:
 clusters[,Label := treeID]
 
@@ -57,12 +55,12 @@ points = points[Sample_ID %in% validIDs,]
 # RUN THESIS ALGORITHMS:
 assignedPoints = assignPointsToClusters(points, clusters)
 
-#write_feather(assignedPoints, "in_situ_points_with_cluster_assignments.feather")
+write_feather(assignedPoints, "in_situ_points_with_cluster_assignments.feather")
 
 # Now run checkIfPointRepresentsMoreThanOneCluster
 #I am here:
 startTime2 = Sys.time()
-assignedPoints = checkIfPointRepresentsMoreThanOneCluster(assignedPoints, clusters)
+#assignedPoints = checkIfPointRepresentsMoreThanOneCluster(assignedPoints, clusters)
 endTime = Sys.time()
 endTime - startTime2
 
@@ -73,9 +71,9 @@ endTime - startTime
 #write.csv(assignedPoints, "in_situ_points_with_cluster_assignments.csv")
 
 #get cluster dictionary for points:
-clusterDict = buildClusterDict(assignedPoints)
+#clusterDict = buildClusterDict(assignedPoints)
 
-clusters = assignMergedIDsToClusters(clusterDict, clusters)
+#clusters = assignMergedIDsToClusters(clusterDict, clusters)
 
 #Next re-extract cluster metrics with merged cluster IDs
 
@@ -89,6 +87,87 @@ clusters$Label = factor(clusters$Label)
 # 82 "color blind friendly" colors from: 
 # http://tools.medialab.sciences-po.fr/iwanthue/
 # with outliers set to black: "#000000",
+
+colorRamp79 = c("#e59758",
+  "#4a52cd",
+  "#60d249",
+  "#955ce4",
+  "#9dc721",
+  "#b33bbd",
+  "#44af29",
+  "#732b9e",
+  "#c6c120",
+  "#d277ec",
+  "#59ca61",
+  "#e94cbf",
+  "#509822",
+  "#b42a91",
+  "#95ce51",
+  "#995cc4",
+  "#8ab72f",
+  "#6382e7",
+  "#e3b434",
+  "#4c54a5",
+  "#bdbb47",
+  "#8e3b86",
+  "#3ecb88",
+  "#e83381",
+  "#429945",
+  "#da65ab",
+  "#799625",
+  "#dd93e4",
+  "#a6bf55",
+  "#a0295e",
+  "#8bc876",
+  "#dd3652",
+  "#55cabc",
+  "#ee4731",
+  "#56b7c6",
+  "#bc2d1f",
+  "#5faed8",
+  "#e78e25",
+  "#9e82cb",
+  "#a59229",
+  "#87a0d6",
+  "#e36531",
+  "#3f9a79",
+  "#dd5a81",
+  "#72c593",
+  "#9f3233",
+  "#79c09f",
+  "#9d4314",
+  "#45638c",
+  "#b78028",
+  "#6f4a7a",
+  "#b4bf77",
+  "#ba71a2",
+  "#346016",
+  "#cfa5d2",
+  "#68701a",
+  "#d47d90",
+  "#3a8147",
+  "#dc6b64",
+  "#317674",
+  "#d07248",
+  "#31613f",
+  "#924355",
+  "#76994e",
+  "#8d5d6b",
+  "#d9b164",
+  "#514e24",
+  "#db9fa7",
+  "#627140",
+  "#e59b81",
+  "#789674",
+  "#864633",
+  "#9cbfa1",
+  "#935822",
+  "#ceb089",
+  "#84651e",
+  "#ab7b5a",
+  "#9a8e52",
+  "#745a36")
+
 cbf = c(#"#000000", 
   "#be408c",
   "#4cdc8b",
@@ -440,6 +519,18 @@ ggp = ggp + geom_point(data = assignedPoints[closest_cluster_outside_threshold =
 ggp
 #testing adding assigned_to_point column to clusters:
 #ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(assigned_to_point)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + scale_colour_manual(values = cbf) 
+
+
+#plotting density threshold:
+closestPoints = assignedPoints[,.SD[which.min(distance_to_closest_cluster_member)], by = cluster_ID]
+plot(density(closestPoints$distance_to_closest_cluster_member, kernel=c("gaussian")), main = NULL, xlab = NULL)
+abline(v = dmode(closestPoints$distance_to_closest_cluster_member), col = "red")
+abline(v = 10 * dmode(closestPoints$distance_to_closest_cluster_member), col = "darkgreen")
+
+
+
+
+
 
 #PLOTTING ONLY THOSE POINTS THAT REPRESENT CLUSTERS WHICH HAVE BEEN MERGED:
 #plotting XY cluster-points and assigned points within threshold

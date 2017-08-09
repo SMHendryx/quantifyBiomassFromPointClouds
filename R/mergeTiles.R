@@ -20,10 +20,10 @@ directoryPath = args[1]
 file = args[2]
 plotControl = args[3]
 writeControl = args[4]
-#directoryPath = "/Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/classified/mcc-s_point20_-t_point05/tiles/"
-#file = "/Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las"
-#plotControl = TRUE
-#writeControl = TRUE
+directoryPath = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/tiles/"
+file = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/belowGroundPointsRemoved_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las"
+plotControl = TRUE
+writeControl = TRUE
 
 setwd(directoryPath)
 fileList = list.files()
@@ -51,11 +51,14 @@ rm(original)
 
 mergedLas = LAS(merged, header = head)
 
+if(plotControl){
+  plot(mergedLas, color = "Classification")
+  #plot(mergedLas, color = "color")
+  Sys.sleep(30)
+}
+
+
 if(writeControl){
   writeLAS(mergedLas, paste0(directoryPath, "../Merged_Ground_Classified.las"))
 }
 
-if(plotControl){
-  plot(mergedLas, color = "Classification")
-  #plot(mergedLas, color = "color")
-}

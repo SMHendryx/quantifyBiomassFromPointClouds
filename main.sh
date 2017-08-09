@@ -32,11 +32,14 @@ cp mcc-s_point20_-t_point05/tiles/*.las all_tiles
 # Merge now-classified tiles back together:
 #args should be (complete paths) 1. directory containing las files to be merged, 2. original las file from which to pull las header 3. whether or not to plot
 Rscript mergeTiles.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/all_tiles/ /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/belowGroundPointsRemoved_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las TRUE
-#Rscript mergeTiles.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/classified/PMF/tiles/ /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las TRUE
+Rscript mergeTiles.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/PMF/tiles/ /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/belowGroundPointsRemoved_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las TRUE
+
+# Get nonground points 1m or greater height above ground:
+Rscript extractNonGroundPoints.R
 
 # Cluster points, via watershed, OPTICS, etc.:
 # use OPTICS to identify outliers:
-Rscript run_OPTICS.R
+python run_OPTICS.py
 Rscript remove_OPTICS_outliers.R
 # then run watershed on point cloud that doesn't have outliers:
 Rscript watershedSegmentTrees.R

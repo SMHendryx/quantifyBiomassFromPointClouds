@@ -11,17 +11,25 @@ import time
 # OPTICS needs to be installed from sklearn espg fork
 from sklearn.cluster import OPTICS
 import feather
+import pandas
 
-#ARGUMENTS CURRENTLY HARDCODED:
-# SHOULD BE INPUT AS:
-#"-f path/to/file -eps eps -min_samples minNumSamples
-arguments = sys.argv[1:]
 
-filePath = arguments[1]
-eps = float(arguments[3])
-minNumSamples = int(arguments[5])
+eps = 8.3
+minNumSamples = 150
 
 filePath = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/GreaterThan1mHAG/SfM_nonground_points.feather"
+
+argControl = False
+if(argControl):
+    #ARGUMENTS CURRENTLY HARDCODED:
+    # SHOULD BE INPUT AS:
+    #"-f path/to/file -eps eps -min_samples minNumSamples
+    arguments = sys.argv[1:]
+
+    filePath = arguments[1]
+    eps = float(arguments[3])
+    minNumSamples = int(arguments[5])
+
 data = feather.read_dataframe(filePath)
 # pandas get X,Y,Z:
 df = data[['X','Y', 'Z']]
@@ -55,8 +63,7 @@ testtree = OPTICS(eps = eps, min_samples = minNumSamples).fit(X)
 timeElapsed = time.time() - startTime
 print("OPTICS.fit(eps = {0}, min_samples = {1}) time elapsed: ".format(eps, minNumSamples), timeElapsed, "\n")
 
-
-
+# i am here:
 # Core samples and labels #
 core_samples = testtree._index[testtree._is_core[:] > 0]
 labels = testtree._cluster_id[:]
@@ -94,8 +101,14 @@ print("Number of clusters from OPTICS parameters eps = {0}, min_samples = {1}, e
 #Save output
 #here
 clusteredPoints = np.column_stack((X, labels.T))
-o_fname = "OPTICS_clustered_points_eps_{0}_min_samples_{1}.csv".format(eps, minNumSamples)
-np.savetxt(o_fname, clusteredPoints, delimiter=',', header='X, Y, Z, Label')
+
+#convert to pandas DataFrame for writing to feather:
+clustereddf = pandas.DataFrame(data = clusteredPoints)
+clustereddf.columns = ['X', 'Y', 'Z', 'Label']
+
+o_fname = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/GreaterThan1mHAG/OPTICS_clustered_points_eps_{0}_min_samples_{1}.feather".format(eps, minNumSamples)
+
+feather.write_dataframe(clustereddf, o_fname)
 
 
 

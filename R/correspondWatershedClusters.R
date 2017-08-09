@@ -14,15 +14,18 @@ getErrors = function(measured, predicted){
 
 #Define functions:
 rmse = function(errors){
-  return(sqrt(mean(errors^2)))
+  return(sqrt(mean(errors^2, na.rm = TRUE), na.rm = TRUE))
 }
 
+mae = function(errors){
+	return(mean(abs(errors),na.rm = TRUE))
+}
 
 #getdata:
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
+setwd("/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/")
 #setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
 #DT of features:
-DT = as.data.table(read_feather("cluster_features.feather"))
+DT = as.data.table(read_feather("cluster_features_with_label.feather"))
 # Tree column is the cluster label (points$cluster_ID)
 # Convert it to cluster_ID:
 setnames(DT, "Tree", "Cluster_ID")
@@ -94,7 +97,7 @@ melted = melt(assumeSpecDT, measure.vars = c("assume_mesq_AGB_cluster_measuremen
 pSpec = ggplot(data = melted, mapping = aes(x = Cluster_CA,Estimated_AGB)) + geom_point(mapping = aes(color = variable)) + theme_bw() + labs(x = expression(paste("Cluster Canopy Area (", {m^2}, ")")), y = "Estimated AGB (kg)", color = "Allometric Equation") + scale_color_hue(labels = c("Prosopis Velutina", "Celtis Pallida", "Ecosystem State Allometry"))
 
 
-write_feather(LF, "cluster_features_with_labels.feather")
+#write_feather(LF, "cluster_features_with_labels.feather")
 
 
 
@@ -114,7 +117,7 @@ p = ggplot(data = melted, aes(x = Cluster_CA, y = AGB, color = variable)) + geom
 boxplot <- ggplot(data = melted, aes(x = factor(variable), AGB)) + geom_boxplot() + theme_bw() + labs(x = "Assumed Species", y = "Above Ground Biomass (kg)")
 boxplot
 
-density = ggplot(data = melted, mapping = aes(x = value)) + geom_density(aes(fill = variable)) + theme_bw()
+density = ggplot(data = melted, mapping = aes(x = AGB)) + geom_density(aes(fill = variable)) + theme_bw()
 
 #both 
 
@@ -198,27 +201,28 @@ ply
 # and now plotting summed in situ mass by cluster:
 #ANNOTATE WITH RMSE INSTEAD OF R SQUARED
 errors = getErrors(LF$assume_mesq_AGB_cluster_measurements, LF$in_situ_AGB_summed_by_cluster)
-RMSE = rmse(errors)
+MAE = mae(errors)
 p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = assume_mesq_AGB_cluster_measurements)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
-p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions Assuming Mesquite Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB from Cluster Dimensions & P.V. Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
 #m = lm(LF[,assume_mesq_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
 #r2 = format(summary(m)$r.squared, digits = 3)
 #text = paste("r^2 == ", r2)
-text = paste("RMSE == ", RMSE)
-p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
-p = p + geom_abline(color = "red")
+text = paste("MAE == ", MAE)
+p = p + annotate("text",x = 400, y = 50, label = text, parse = TRUE)
+p = p + geom_abline(color = "red")# + coord_equal()
+p = p + theme(axis.text=element_text(size=9), axis.title=element_text(size=12))
 
 # Now using ecosystem allometry:
 errors = getErrors(LF$ecoAllom_AGB_cluster_measurements, LF$in_situ_AGB_summed_by_cluster)
-RMSE = rmse(errors)
+MAE = mae(errors)
 p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = ecoAllom_AGB_cluster_measurements)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
 p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB Estimated from Cluster Dimensions & Ecosystem-State Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
 #m = lm(LF[,ecoAllom_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
 #r2 = format(summary(m)$r.squared, digits = 3)
 #text = paste("r^2 == ", r2)
-text = paste("RMSE == ", RMSE)
+text = paste("MAE == ", MAE)
 p = p + annotate("text",x = 300, y = 3500, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")
 

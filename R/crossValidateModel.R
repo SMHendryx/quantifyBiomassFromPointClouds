@@ -150,11 +150,14 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
 # Run main:
 #k = 5
 
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
+setwd("/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/")
 
 LF = as.data.table(read_feather("cluster_features_with_label.feather"))
 LF[,Cluster_ID := NULL]
 setnames(LF, "in_situ_AGB_summed_by_cluster", "Label")
+
+#Remove any rows where label == NA
+LF = LF[!is.na(Label),]
 
 results = crossValidate(LF, LOOCV = TRUE)
 
@@ -172,6 +175,7 @@ dRMSE = rmse(deterministicErrors)
 print(paste("deterministic RMSE = ", dRMSE))
 modelRMSE = rmse(modelErrors)
 print(paste("randomForest RMSE = ", modelRMSE))
+RFEcoAlloRMSE = rmse(RFEcoAlloErrors)
 
 mesqMAE = mae(mesqAssumptionErrors)
 mesqMAE
@@ -200,7 +204,7 @@ meltr = melt(results, measure.vars= c("Model_Predictions", "Deterministic_Predic
 p = ggplot(data = meltr, mapping = aes(x = Actual, y = value, color = variable)) + geom_point() + theme_bw() + geom_smooth(method = "lm", se = FALSE)
 p = p + labs(x = "AGB Reference (kg)", y = "AGB Estimate (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
-p = p + geom_abline(color = "red") + scale_color_hue(name = "Prediction Type", 
+p = p + geom_abline(color = "darkblue") + scale_color_hue(name = "Prediction Type", 
                       breaks=c("Model_Predictions", "Deterministic_Predictions", "Mesquite_Allometry_Assumed", "Mean_RF_EcoAllo"), 
                       labels=c("Random Forest", "Ecosystem State Allometry", "Mesquite Allometry", "Mean of RF & Ecosystem State"))
 

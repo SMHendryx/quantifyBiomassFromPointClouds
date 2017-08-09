@@ -1,4 +1,4 @@
-# Trains a real-valued prediction model
+# Computes the biomass of deterministic allometric equations
 
 library(feather)
 library(lidR)
@@ -8,7 +8,7 @@ source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 
 
 #getdata:
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
+setwd("/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/")
 
 # read in points (labeled data):
 points = as.data.table(read_feather("in_situ_points_with_cluster_assignments.feather"))

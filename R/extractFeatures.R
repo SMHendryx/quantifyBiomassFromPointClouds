@@ -43,6 +43,7 @@ if(discardIntensity){
 }
 
 # read in points (labeled data):
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3/")
 points = as.data.table(read_feather("in_situ_biomass_points_with_cluster_assignments.feather"))
 
 #These next three lines of code should be moved to extractFeatures.R:

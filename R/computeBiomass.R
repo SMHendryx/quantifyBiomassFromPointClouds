@@ -12,7 +12,8 @@ argsControl = TRUE
 
 if(argsControl){
   args = commandArgs(trailingOnly = TRUE)
-  #args should be (complete paths with '/' after directories) 1. file from which to extract nonground points, 2. directory in which to write output point cloud files, 3. whether or not to plot (default is FALSE) 4. whether or not to write (default is TRUE)
+  #args: 1. directory in which to write (and from which to read if second argument is not specified), 2. input file
+  #args should be (complete paths with '/' after directories) 
 
   # test if there is at least one argument: if not, return an error
   if (length(args) < 1) {

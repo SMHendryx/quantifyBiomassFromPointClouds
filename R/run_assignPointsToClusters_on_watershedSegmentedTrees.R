@@ -35,13 +35,11 @@ source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/R/assignPo
 
 
 #Run
-
-inFile = "Rectangular_UTMAZ_Tucson_2011_000564.las"
-outDirec = "/Users/seanhendryx/Data/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area"
+outDirec = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers"
 setwd(outDirec)
 
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("Alidar_Clustered_By_Watershed_Segmentation.feather"))
+clusters = as.data.table(read_feather("ALidar_Clustered_By_Watershed_Segmentation.feather"))
 # add column named "Label", since that is what assignPointsToClusters is looking for:
 clusters[,Label := treeID]
 
@@ -56,13 +54,14 @@ validIDs = as.character(validIDs)
 points = points[Sample_ID %in% validIDs,]
 
 # RUN THESIS ALGORITHMS:
-buff = 10
+#buffer equal to 3 qualitative best from graphs:
+buff = 3
 assignedPoints = assignPointsToExistingClusters(points, clusters, buffer = buff)
 numPointsWithInThresh = nrow(assignedPoints[closest_cluster_outside_threshold==FALSE])
 numPointsWithInThresh
 
-
-#write_feather(assignedPoints, "in_situ_points_with_cluster_assignments.feather")
+setwd(paste0("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer", buff))
+write_feather(assignedPoints, paste0("in_situ_points_with_cluster_assignments_buffer_", buff, ".feather"))
 
 # Now run checkIfPointRepresentsMoreThanOneCluster
 #I am here:
@@ -821,9 +820,16 @@ minY = min(plotDT[,Y])
 assignedPoints = assignedPoints[X < maxX & X > minX & Y < maxY & Y > minY]
 
 
+#plotting XY cluster-points and ALL in situ points
+renderStartTime = Sys.time()
+ggp1 = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + coord_equal() + scale_colour_manual(values = cbf240)
+ggp1 = ggp1 + geom_point(data = assignedPoints, mapping = aes(x = X, y = Y), shape = 8)
+ggp1
+Sys.time() - renderStartTime
+
 #plotting XY cluster-points and assigned points within threshold
 renderStartTime = Sys.time()
-ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + coord_equal() + scale_colour_manual(values = colorRamp291)
+ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + coord_equal() + scale_colour_manual(values = cbf240)
 ggp = ggp + geom_point(data = assignedPoints[closest_cluster_outside_threshold == FALSE,], mapping = aes(x = X, y = Y), shape = 8)
 ggp
 Sys.time() - renderStartTime

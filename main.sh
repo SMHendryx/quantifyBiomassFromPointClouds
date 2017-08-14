@@ -46,22 +46,22 @@ Rscript extractNonGroundPoints.R
 python run_OPTICS.py
 Rscript remove_OPTICS_outliers.R 
 
-# then run watershed on point cloud that doesn't have outliers: #i am here:
-Rscript watershedSegmentTrees.R
+# then run watershed on point cloud that doesn't have outliers:
+Rscript watershedSegmentTrees_afterOPTICSOutliersRemoved.R
 
-# set up training and validation data:
-Rscript assignPointsToClusters.R
+# set up training and validation data:  # Need to rerun SfM from here:
+Rscript run_assignPointsToClusters_on_watershedSegmentedTrees.R
 
 # Compute biomass of in situ data:
-Rscript computeBiomass.R /Users/seanhendryx/Data/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/
+Rscript computeBiomass.R /Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3 in_situ_points_with_cluster_assignments_buffer_3.feather
 
 # Extract Features: 
-Rscript extractFeatures.R
-#Connect cluster features and biomass: 
-Rscript correspondWatershedClusters
+extractFeatures.R
+# Graph correspondences between cluster features and labels
+correspondWatershedClusters
 
-# Train & validate model (report error statistics: MAE and, for best model, RMSE): (I am here)
-Rscript crossValModel.R
+# Train & validate model (report error statistics: MAE and, for best model, RMSE): 
+crossValidateModel.R
 
 # Run model to produce fine-scale, biomass-density raster:
 Rscript runModel.R

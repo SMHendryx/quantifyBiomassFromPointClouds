@@ -22,7 +22,7 @@ mae = function(errors){
 }
 
 #getdata:
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area")
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3/")
 #setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
 #DT of features:
 DT = as.data.table(read_feather("cluster_features_with_label.feather"))
@@ -103,15 +103,11 @@ melted = melt(assumeSpecDT, measure.vars = c("assume_mesq_AGB_cluster_measuremen
 pSpec = ggplot(data = melted, mapping = aes(x = Cluster_CA,Estimated_AGB)) + geom_point(mapping = aes(color = variable)) + theme_bw() + labs(x = expression(paste("Cluster Canopy Area (", {m^2}, ")")), y = "Estimated AGB (kg)", color = "Allometric Equation") + scale_color_hue(labels = c("Prosopis Velutina", "Celtis Pallida", "Ecosystem State Allometry"))
 
 
-#write_feather(LF, "cluster_features_with_labels.feather")
-
-
-
-
 #make plots of differing assumed species:
 pHack = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = Cluster_CA, y= assume_hack_AGB_cluster_measurements)) + geom_point() + theme_bw()
 pMesq = ggplot(data = LF[closest_cluster_outside_threshold==FALSE,], mapping = aes(x = Cluster_CA, y= assume_mesq_AGB_cluster_measurements)) + geom_point() + theme_bw()
 pHack
+dev.new()
 pMesq
 
 histDT = LF[,.(assume_hack_AGB_cluster_measurements, assume_mesq_AGB_cluster_measurements, Cluster_CA)]
@@ -205,17 +201,17 @@ ply
 
 #Same as last with no point colors
 # and now plotting summed in situ mass by cluster:
-#ANNOTATE WITH RMSE INSTEAD OF R SQUARED
+#ANNOTATE WITH MAE INSTEAD OF RMSE
 errors = getErrors(LF$assume_mesq_AGB_cluster_measurements, LF$in_situ_AGB_summed_by_cluster)
 MAE = mae(errors)
 p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = assume_mesq_AGB_cluster_measurements)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
-p = p + labs(x = "In Situ AGB of Cluster (kg)", y = "AGB from Cluster Dimensions & P.V. Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + labs(x = "AGB Estimate of Cluster from In Situ Tree Measurements (kg)", y = "AGB Estimate from Cluster Dimensions & Mesquite Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
 #m = lm(LF[,assume_mesq_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
 #r2 = format(summary(m)$r.squared, digits = 3)
 #text = paste("r^2 == ", r2)
 text = paste("MAE == ", MAE)
-p = p + annotate("text",x = 400, y = 50, label = text, parse = TRUE)
+p = p + annotate("text",x = 100, y = 300, label = text, parse = TRUE)
 p = p + geom_abline(color = "red")# + coord_equal()
 p = p + theme(axis.text=element_text(size=9), axis.title=element_text(size=12))
 

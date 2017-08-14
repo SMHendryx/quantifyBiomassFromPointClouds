@@ -40,7 +40,6 @@ trainModel = function(LF){
 
 testModel = function(LF, model){
   # Returns model predictions
-  
   F = copy(LF)
   F[,Label := NULL]
   predictions = as.data.table(as.data.frame(predict(model, F)))
@@ -150,7 +149,7 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
 # Run main:
 #k = 5
 
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area")
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3/")
 
 LF = as.data.table(read_feather("cluster_features_with_label.feather"))
 LF[,Cluster_ID := NULL]

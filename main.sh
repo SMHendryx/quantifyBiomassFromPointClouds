@@ -49,14 +49,15 @@ Rscript remove_OPTICS_outliers.R
 # then run watershed on point cloud that doesn't have outliers:
 Rscript watershedSegmentTrees_afterOPTICSOutliersRemoved.R
 
-# set up training and validation data:  # Need to rerun SfM from here:
+# set up training and validation data: 
 Rscript run_assignPointsToClusters_on_watershedSegmentedTrees.R
 
-# Compute biomass of in situ data:
-Rscript computeBiomass.R /Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3 in_situ_points_with_cluster_assignments_buffer_3.feather
+# Compute biomass of in situ data: (i am here)
+Rscript computeBiomass.R /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/buffer3/ in_situ_points_with_cluster_assignments_buffer_3.feather
 
 # Extract Features: 
 extractFeatures.R
+
 # Graph correspondences between cluster features and labels
 correspondWatershedClusters
 

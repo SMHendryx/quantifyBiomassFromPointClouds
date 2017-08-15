@@ -149,7 +149,7 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
 # Run main:
 #k = 5
 
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3/")
+setwd("/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/buffer3")
 
 LF = as.data.table(read_feather("cluster_features_with_label.feather"))
 LF[,Cluster_ID := NULL]
@@ -221,12 +221,27 @@ c3 = ggplot(data = melted3, mapping = aes(x = Fold, y = value, color = variable)
                       labels=c("RFCF Model", "Ecosystem State Allometry", "Assumed Mesquite Allometry", "Mean of RFCF & Ecosystem State"))
 
 
-#adding Actual and Fold columns to error datatable:
-eDT[,Actual := results[,Actual]][,Fold := results[,Fold]]
-melted2 = melt(eDT, measure.vars = c("modelErrors", "deterministicErrors"))
-c = ggplot(data = melted2, mapping = aes(x = Fold, y = cumsum(value), color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Difference from Test Data (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+#plotting cumulative absolute errors:
+absEDT = copy(eDT)
+absEDT[, cModelErrors := cumsum(abs(modelErrors))][,cDeterministicErrors := cumsum(abs(deterministicErrors))][,cMesqAssumptionErrors := cumsum(abs(mesqAssumptionErrors))][,cMeanRFEcoAllErrors := cumsum(abs(RFEcoAlloErrors))]
+melted4 = melt(absEDT, measure.vars = c("cModelErrors", "cDeterministicErrors", "cMesqAssumptionErrors", "cMeanRFEcoAllErrors"))
+melted4[,c("modelErrors", "deterministicErrors", "mesqAssumptionErrors") := NULL]
+absEPlot = ggplot(data = melted4, mapping = aes(x = Fold, y = value, color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Absolute Difference from Test Data (kg)") + scale_color_hue(name = "Prediction Type", 
+                      breaks=c("cModelErrors","cDeterministicErrors", "cMesqAssumptionErrors", "cMeanRFEcoAllErrors"), 
+                      labels=c("RFCF Model", "Ecosystem State Allometry", "Assumed Mesquite Allometry", "Mean of RFCF & Ecosystem State"))
 
-cabs = ggplot(data = melted2, mapping = aes(x = Fold, y = cumsum(abs(value)), color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Absolute Difference from Test Data (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+#cabs = ggplot(data = melted2, mapping = aes(x = Fold, y = cumsum(abs(value)), color = variable)) + geom_line() + theme_bw() +  labs(x = "Fold", y = "Cumulative Absolute Difference from Test Data (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+
+#Test cumulative absolute error:
+sum(abs(eDT$modelErrors))
+# Alidar 3799.751 # Random Forest on Cluster Features
+sum(abs(eDT$deterministicErrors))
+# Alidar 5052.038 # Ecosystem state deterministic estimate CV absolute error
+sum(abs(eDT$mesqAssumptionErrors))
+# Alidar 5149.77
+sum(abs(eDT$RFEcoAlloErrors))
+# Alidar 3693.623 # ensemble model that is the mean of RFCF and ecosystem state
+
 
 #i am here
 #now do t.test on errors to show significant reduction

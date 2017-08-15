@@ -35,11 +35,11 @@ source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/R/assignPo
 
 
 #Run
-outDirec = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers"
+outDirec = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05"
 setwd(outDirec)
 
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("ALidar_Clustered_By_Watershed_Segmentation.feather"))
+clusters = as.data.table(read_feather("SfM_allTilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather"))
 # add column named "Label", since that is what assignPointsToClusters is looking for:
 clusters[,Label := treeID]
 
@@ -60,7 +60,7 @@ assignedPoints = assignPointsToExistingClusters(points, clusters, buffer = buff)
 numPointsWithInThresh = nrow(assignedPoints[closest_cluster_outside_threshold==FALSE])
 numPointsWithInThresh
 
-setwd(paste0("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer", buff))
+setwd(paste0("/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/buffer", buff))
 write_feather(assignedPoints, paste0("in_situ_points_with_cluster_assignments_buffer_", buff, ".feather"))
 
 # Now run checkIfPointRepresentsMoreThanOneCluster
@@ -831,6 +831,7 @@ Sys.time() - renderStartTime
 renderStartTime = Sys.time()
 ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + coord_equal() + scale_colour_manual(values = cbf240)
 ggp = ggp + geom_point(data = assignedPoints[closest_cluster_outside_threshold == FALSE,], mapping = aes(x = X, y = Y), shape = 8)
+dev.new()
 ggp
 Sys.time() - renderStartTime
 

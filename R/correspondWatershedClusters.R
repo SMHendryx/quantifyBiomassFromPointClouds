@@ -22,15 +22,14 @@ mae = function(errors){
 }
 
 #getdata:
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3/")
+setwd("/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/buffer3")
 #setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/OPTICS_Param_Tests/study-area")
 #DT of features:
 DT = as.data.table(read_feather("cluster_features_with_label.feather"))
 # Tree column is the cluster label (points$cluster_ID)
 # Convert it to cluster_ID:
 #setnames(DT, "Tree", "Cluster_ID")
-# ^ should already have been done in extractFeatures.R.  "Tree" is the output column from watershed segmentation in lidR
-
+# should already have been done in extractFeatures.R.  "Tree" is the output column from watershed segmentation in lidR
 
 # read in points (labeled data):
 points = as.data.table(read_feather("in_situ_biomass_points_with_cluster_assignments.feather"))
@@ -205,7 +204,7 @@ ply
 errors = getErrors(LF$assume_mesq_AGB_cluster_measurements, LF$in_situ_AGB_summed_by_cluster)
 MAE = mae(errors)
 p = ggplot(data = LF, mapping = aes(x = in_situ_AGB_summed_by_cluster,y = assume_mesq_AGB_cluster_measurements)) + geom_point(size = 2) + theme_bw() + geom_smooth(method = "lm", se = FALSE) + guides(color=FALSE) #guides(fill=FALSE) removes legend
-p = p + labs(x = "AGB Estimate of Cluster from In Situ Tree Measurements (kg)", y = "AGB Estimate from Cluster Dimensions & Mesquite Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
+p = p + labs(x = expression(paste("AGB Estimate of Cluster from", sum("In Situ Tree Measurements (kg)"))), y = "AGB Estimate from Cluster Dimensions & Mesquite Allometry (kg)")# + ggtitle("Feature Family Subset Classification Performance")
 p = p + theme(plot.title = element_text(hjust = 0.5))
 #m = lm(LF[,assume_mesq_AGB_cluster_measurements] ~ LF[,in_situ_AGB_summed_by_cluster])
 #r2 = format(summary(m)$r.squared, digits = 3)

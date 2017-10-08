@@ -7,15 +7,19 @@
 # First, clip point cloud to study area if necessary:
 Rscript clipPointCloudsToStudyArea.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las 
 
-#decimate the point cloud if very dense:
-Rscript decimate_PointClouds.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las
+#(I am here)
+#decimate the point cloud if very dense: (what is "very dense"?)
+#Rscript decimate_PointClouds.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las
+#only 256k points so let's try w/o decimation
 
-Rscript removeGroundPoints.R 
+#Plus, it's already ground classed
+
+#Rscript removeGroundPoints.R 
 
 # Then tile the point cloud: 
 Rscript run_tileR.R /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/tiles/ /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/groundPointsRemoved_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las
 
-# Classify ground points: (I am here)
+# Classify ground points: 
 # manually move files to cyberduck, then:
 ./move_tiles_to_Jetstream_from_Cyberduck.sh
 ./run_MCC_Lidar_on_Jetstream.sh
@@ -34,29 +38,30 @@ cp mcc-s_point20_-t_point05/tiles/*.las all_tiles
 Rscript mergeTiles.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/all_tiles/ /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/belowGroundPointsRemoved_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las TRUE
 Rscript mergeTiles.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/PMF/tiles/ /Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/belowGroundPointsRemoved_Rectangular_MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las TRUE
 
-# Get nonground points 1m or greater height above ground:
+# Get nonground points 1m or greater height above ground: 
 Rscript extractNonGroundPoints.R
 
 # Cluster points, via watershed, OPTICS, etc.:
 # use OPTICS to identify outliers:
 python run_OPTICS.py
-Rscript remove_OPTICS_outliers.R
-# then run watershed on point cloud that doesn't have outliers:
-Rscript watershedSegmentTrees.R
+Rscript remove_OPTICS_outliers.R 
 
-# set up training and validation data:
-Rscript assignPointsToClusters.R
+# then run watershed on point cloud that doesn't have outliers:
+Rscript watershedSegmentTrees_afterOPTICSOutliersRemoved.R
+
+# set up training and validation data:  # Need to rerun SfM from here:
+Rscript run_assignPointsToClusters_on_watershedSegmentedTrees.R
 
 # Compute biomass of in situ data:
-Rscript computeBiomass.R
+Rscript computeBiomass.R /Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3 in_situ_points_with_cluster_assignments_buffer_3.feather
 
-# Extract Features:
-Rscript extractFeatures.R
-#Connect cluster features and biomass:
-Rscript correspondWatershedClusters
+# Extract Features: 
+extractFeatures.R
+# Graph correspondences between cluster features and labels
+correspondWatershedClusters
 
-# Train & validate model (report error statistics: MAE and, for best model, RMSE):
-Rscript crossValModel.R
+# Train & validate model (report error statistics: MAE and, for best model, RMSE): 
+crossValidateModel.R
 
 # Run model to produce fine-scale, biomass-density raster:
 Rscript runModel.R

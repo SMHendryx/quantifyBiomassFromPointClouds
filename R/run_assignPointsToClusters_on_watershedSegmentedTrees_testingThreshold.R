@@ -35,11 +35,13 @@ source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/R/assignPo
 
 
 #Run
-outDirec = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers"
+
+inFile = "Rectangular_UTMAZ_Tucson_2011_000564.las"
+outDirec = "/Users/seanhendryx/Data/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area"
 setwd(outDirec)
 
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("ALidar_Clustered_By_Watershed_Segmentation.feather"))
+clusters = as.data.table(read_feather("Alidar_Clustered_By_Watershed_Segmentation.feather"))
 # add column named "Label", since that is what assignPointsToClusters is looking for:
 clusters[,Label := treeID]
 
@@ -54,14 +56,402 @@ validIDs = as.character(validIDs)
 points = points[Sample_ID %in% validIDs,]
 
 # RUN THESIS ALGORITHMS:
-#buffer equal to 3 qualitative best from graphs:
-buff = 3
-assignedPoints = assignPointsToExistingClusters(points, clusters, buffer = buff)
-numPointsWithInThresh = nrow(assignedPoints[closest_cluster_outside_threshold==FALSE])
-numPointsWithInThresh
+#testing buffer parameter settings:
+# set up plotting
+colorRamp291 = c(
+  "#aa8e27",
+  "#3e50ec",
+  "#8dea37",
+  "#4e2ac0",
+  "#b9ed3a",
+  "#8e49e9",
+  "#3ce85f",
+  "#b631cf",
+  "#70ea60",
+  "#e152ed",
+  "#87c618",
+  "#724fe2",
+  "#cde83c",
+  "#293bbe",
+  "#e3dd27",
+  "#3e57da",
+  "#aad02d",
+  "#8b2cbb",
+  "#33ba3d",
+  "#b25aed",
+  "#89e35f",
+  "#e043ce",
+  "#6ee982",
+  "#e321b2",
+  "#5bb132",
+  "#9867f6",
+  "#d6dc44",
+  "#7468ef",
+  "#f6c519",
+  "#513eb4",
+  "#afed6d",
+  "#83169a",
+  "#73ae22",
+  "#864bcc",
+  "#b2ba1a",
+  "#6c2ea7",
+  "#8ecd51",
+  "#b91ea2",
+  "#54e492",
+  "#f128a4",
+  "#59f6bd",
+  "#fa53ce",
+  "#45921e",
+  "#ba61df",
+  "#88aa16",
+  "#9b75f6",
+  "#cebe21",
+  "#3447b4",
+  "#eede59",
+  "#6371eb",
+  "#bde267",
+  "#a835a7",
+  "#9abf46",
+  "#633ca3",
+  "#dcb832",
+  "#3770df",
+  "#ee921e",
+  "#478fed",
+  "#f04514",
+  "#4be9dd",
+  "#e6262f",
+  "#4ed1f8",
+  "#eb4b2f",
+  "#2baad3",
+  "#b12714",
+  "#61d8a8",
+  "#e349b8",
+  "#40a149",
+  "#ce268c",
+  "#6ac572",
+  "#c14ab3",
+  "#abec94",
+  "#7f2d93",
+  "#ccd966",
+  "#855ece",
+  "#a8b334",
+  "#b780f3",
+  "#2a731a",
+  "#dc7be9",
+  "#8ca336",
+  "#473f9c",
+  "#c7bb43",
+  "#6f3a93",
+  "#95cf73",
+  "#e66dd5",
+  "#1f7330",
+  "#f04ba6",
+  "#41b178",
+  "#e83381",
+  "#4b934d",
+  "#eb67bc",
+  "#44701b",
+  "#a05abc",
+  "#eaae3b",
+  "#7a8ef4",
+  "#d6791f",
+  "#467dd3",
+  "#e26428",
+  "#589fe9",
+  "#cb8a24",
+  "#7373d4",
+  "#e5c35d",
+  "#274994",
+  "#dad06d",
+  "#8a2783",
+  "#a5e6a8",
+  "#eb2b5b",
+  "#3cafa1",
+  "#ea3772",
+  "#50ac88",
+  "#d42f3d",
+  "#63d1e7",
+  "#ab440b",
+  "#43a2da",
+  "#ec5d51",
+  "#68c8ca",
+  "#c32a46",
+  "#92e5e9",
+  "#951a28",
+  "#a9ead1",
+  "#9a1d70",
+  "#7faf62",
+  "#c54091",
+  "#6b8623",
+  "#c186e6",
+  "#a69e34",
+  "#715cb6",
+  "#b6cc7f",
+  "#72327c",
+  "#d7df99",
+  "#545daf",
+  "#a17018",
+  "#2c61af",
+  "#c48738",
+  "#9a82e0",
+  "#255719",
+  "#e990e7",
+  "#457636",
+  "#e95fa4",
+  "#3b8554",
+  "#be2c60",
+  "#328867",
+  "#ef6174",
+  "#235e31",
+  "#be68bd",
+  "#9ca756",
+  "#a752a6",
+  "#8a8731",
+  "#b594ed",
+  "#6c7121",
+  "#cc7dcf",
+  "#4f6621",
+  "#dc73bc",
+  "#3b541a",
+  "#f0a1e8",
+  "#5c5309",
+  "#a19ced",
+  "#9e5309",
+  "#68b8ec",
+  "#c04137",
+  "#3f81c2",
+  "#c16a2d",
+  "#1668a6",
+  "#ec8451",
+  "#154975",
+  "#dfaf62",
+  "#4c4284",
+  "#f1d095",
+  "#633c7c",
+  "#c5e0b1",
+  "#8c1f5d",
+  "#86af7c",
+  "#ac4385",
+  "#1a6447",
+  "#e4659b",
+  "#304e26",
+  "#d4adf4",
+  "#796518",
+  "#829ce5",
+  "#c15730",
+  "#4592be",
+  "#913b14",
+  "#97caf2",
+  "#783019",
+  "#b4bcf7",
+  "#76480d",
+  "#5f74bb",
+  "#eb9e61",
+  "#2178a3",
+  "#f08073",
+  "#13526c",
+  "#f0a07e",
+  "#2e5b88",
+  "#be7541",
+  "#8c83cd",
+  "#957731",
+  "#6f5096",
+  "#c7b572",
+  "#985095",
+  "#78884c",
+  "#9a2054",
+  "#97d0bc",
+  "#9a2340",
+  "#78baa4",
+  "#cb5061",
+  "#54aab9",
+  "#a84535",
+  "#318691",
+  "#8c3724",
+  "#bacaef",
+  "#862a33",
+  "#3d8376",
+  "#d16289",
+  "#284e37",
+  "#ec8dbe",
+  "#426037",
+  "#efb4e8",
+  "#4c501a",
+  "#b69cde",
+  "#646831",
+  "#c776b0",
+  "#3f674d",
+  "#f288aa",
+  "#215e5a",
+  "#e77a8b",
+  "#6a957d",
+  "#a23a50",
+  "#d3cfa8",
+  "#793c73",
+  "#b58949",
+  "#5179aa",
+  "#8e5425",
+  "#84aacd",
+  "#bd644c",
+  "#558aa6",
+  "#cb6563",
+  "#406b87",
+  "#cf8f69",
+  "#3f436d",
+  "#c09669",
+  "#575e8e",
+  "#a19d6e",
+  "#863563",
+  "#6a7d54",
+  "#a575b4",
+  "#605121",
+  "#dbbbec",
+  "#6d421d",
+  "#b9b4dd",
+  "#7d372f",
+  "#9099cb",
+  "#895d35",
+  "#7973a9",
+  "#887543",
+  "#8d6797",
+  "#4e5632",
+  "#e4bad9",
+  "#5d5132",
+  "#f0b8c7",
+  "#65462d",
+  "#bb90bb",
+  "#9d764a",
+  "#485475",
+  "#edb8a6",
+  "#684266",
+  "#caaa89",
+  "#7d2f4c",
+  "#7387ac",
+  "#a04a45",
+  "#db9eb9",
+  "#784533",
+  "#af668f",
+  "#7e6749",
+  "#b45475",
+  "#9c7e61",
+  "#855575",
+  "#e79691",
+  "#70444a",
+  "#d0978a",
+  "#8b435b",
+  "#a3694d",
+  "#986d81",
+  "#bd6e63",
+  "#823d44",
+  "#bc848e",
+  "#b95968",
+  "#b67c68",
+  "#a66378",
+  "#8f5e5b",
+  "#c0757a",
+  "#a45c61")
 
-setwd(paste0("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer", buff))
-write_feather(assignedPoints, paste0("in_situ_points_with_cluster_assignments_buffer_", buff, ".feather"))
+plotClustersWPoints = function(assignedPoints, clusters){
+  #first remove unnecessary points from assigned and thresholded Points:
+  validIDs = c(1:170)
+  validIDs = as.character(validIDs)
+  assignedPoints = assignedPoints[Sample_ID %in% validIDs,]
+  
+  #remove outliers (coded -1) in clusters data.table:
+  plotDT = clusters[Label != -1,]
+  plotDT = droplevels(plotDT)
+  
+  # removing in situ points outside of study area:
+  maxX = max(plotDT[,X])
+  minX = min(plotDT[,X])
+  maxY = max(plotDT[,Y])
+  minY = min(plotDT[,Y])
+  assignedPoints = assignedPoints[X < maxX & X > minX & Y < maxY & Y > minY]
+  
+  
+  #plotting XY cluster-points and assigned points within threshold
+  ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + coord_equal() + scale_colour_manual(values = colorRamp291)
+  ggp = ggp + geom_point(data = assignedPoints[closest_cluster_outside_threshold == FALSE,], mapping = aes(x = X, y = Y), shape = 8)
+  ggp
+  return(ggp)
+}
+
+#make plots:
+buffers = c(Inf, 10,9,8, 7.5,7,6, 5, 4, 3,2.7, 2.5,2.25, 2,1.75, 1.5,1.25, 1)
+numPoints = list()
+plots = list()
+i = 1
+for(buff in buffers){
+  assignedPoints = assignPointsToExistingClusters(points, clusters, buffer = buff)
+  if(buff != Inf){
+    numPoints_i = nrow(assignedPoints[closest_cluster_outside_threshold==FALSE])
+    numPoints[[i]] = numPoints_i
+  }
+  plots[[i]] = plotClustersWPoints(assignedPoints, clusters)
+  i = i +1
+}
+
+#Save plots:
+i = 1
+for(buff in buffers){
+  path = paste0("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/thresholdParamTests/",buff,"-ALidar_Points_Threshold_Buffer.pdf")
+  pdf(path)
+  print(plots[[i]])
+  dev.off()
+  print(paste0("Saved plot ", i))
+  i = i + 1
+}
+#write_feather(assignedPoints, "in_situ_points_with_cluster_assignments.feather")
+
+#remove Inf buff for plotting numPoints over buffer multiplier
+buffers[[1]] = NULL
+
+
+i = 1
+for(buff in buffers){
+  #change symbol for each point:
+  syms = rep(1, length(buffers))
+  syms[[i]] = 19
+  path = paste0("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/thresholdParamTests/pngs/",buff,"_numPointsOverBuffer.png")
+  png(path)
+  plot(buffers, numPoints, pch = syms, xlab = "Buffer Multiplier", ylab = "Number of In Situ Points within Threshold")  
+  dev.off()
+  i = i + 1
+}
+
+#make density plots:
+closestPoints = assignedPoints[,.SD[which.min(distance_to_closest_cluster_member)], by = cluster_ID]
+plots = list()
+i = 1
+for(buff in buffers){
+  #Plotting density threshold:
+  g = ggplot(data = closestPoints, mapping = aes(x = distance_to_closest_cluster_member)) + geom_density() + theme_bw() + labs(x = "Distance to Closest Cluster Member")
+  dMode = dmode(closestPoints$distance_to_closest_cluster_member)
+  g = g + geom_vline(xintercept = dMode, linetype="dotted", color = "blue") + geom_vline(xintercept = buff * dMode,color = "red")
+  
+  plots[[i]] = g
+  i = i +1
+}
+
+#Save plots:
+i = 1
+for(buff in buffers){
+  path = paste0("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/thresholdParamTests/pngs/",buff,"_density_with_buffer_lines.png")
+  png(path)
+  print(plots[[i]])
+  dev.off()
+  print(paste0("Saved plot ", i))
+  i = i + 1
+}
+
+buff = "Inf"
+path = paste0("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/thresholdParamTests/pngs/",buff,"_density_with_buffer_lines.png")
+png(path)
+g = ggplot(data = closestPoints, mapping = aes(x = distance_to_closest_cluster_member)) + geom_density() + theme_bw() + labs(x = "Distance to Closest Cluster Member")
+dMode = dmode(closestPoints$distance_to_closest_cluster_member)
+g = g + geom_vline(xintercept = dMode, linetype="dotted", color = "blue")
+print(g)
+dev.off()
 
 # Now run checkIfPointRepresentsMoreThanOneCluster
 #I am here:
@@ -75,7 +465,7 @@ endTime - startTime
 
 #Plotting density threshold:
 closestPoints = assignedPoints[,.SD[which.min(distance_to_closest_cluster_member)], by = cluster_ID]
-g = ggplot(data = closestPoints, mapping = aes(x = distance_to_closest_cluster_member)) + geom_density() + theme_bw()
+g = ggplot(data = closestPoints, mapping = aes(x = distance_to_closest_cluster_member)) + geom_density() + theme_bw() + labs(x = "Distance to Closest Cluster Member")
 dMode = dmode(closestPoints$distance_to_closest_cluster_member)
 g = g + geom_vline(xintercept = dMode, linetype="dotted", 
                 color = "blue") + geom_vline(xintercept = buff * dMode,color = "red")
@@ -820,16 +1210,9 @@ minY = min(plotDT[,Y])
 assignedPoints = assignedPoints[X < maxX & X > minX & Y < maxY & Y > minY]
 
 
-#plotting XY cluster-points and ALL in situ points
-renderStartTime = Sys.time()
-ggp1 = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + coord_equal() + scale_colour_manual(values = cbf240)
-ggp1 = ggp1 + geom_point(data = assignedPoints, mapping = aes(x = X, y = Y), shape = 8)
-ggp1
-Sys.time() - renderStartTime
-
 #plotting XY cluster-points and assigned points within threshold
 renderStartTime = Sys.time()
-ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + coord_equal() + scale_colour_manual(values = cbf240)
+ggp = ggplot() + geom_point(mapping = aes(x = X, y = Y, color = factor(Label)), data = plotDT, size = .75) + theme_bw() + theme(legend.position="none") + coord_equal() + scale_colour_manual(values = colorRamp291)
 ggp = ggp + geom_point(data = assignedPoints[closest_cluster_outside_threshold == FALSE,], mapping = aes(x = X, y = Y), shape = 8)
 ggp
 Sys.time() - renderStartTime

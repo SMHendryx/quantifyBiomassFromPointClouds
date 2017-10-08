@@ -1,3 +1,5 @@
+# Script segments a point cloud into clusters using watershed segmentation on rasterized point cloud
+
 # Clear workspace:
 rm(list=ls())
 
@@ -6,19 +8,21 @@ library(feather)
 library(data.table)
 
 
-# run from directory containing ground classified point cloud:
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/")
-# or first cd into directory, then start R there
+#get original header:
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/")
 
 # read in original las file
-las = readLAS("all20TilesGroundClassified.las")
+las = readLAS("Rectangular_UTMAZ_Tucson_2011_000564.las")
 # get header:
 oheader = las@header
 
-# read in OPTICS outliers removed non ground points
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers")
+# read in OPTICS outliers removed, non ground points
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/GreaterThan1mHAG/")
+DT = as.data.table(read_feather("OPTICS_outliers_removed_points_eps_8.3_min_samples_15.feather"))
 
-DT = as.data.table(read_feather("OPTICS_outliers_removed_points_eps_8.3_min_samples_150.feather"))
+#then change working directory for writing output:
+setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers")
+
 # Add Classification, all points should be nonground (1):
 DT[,Classification := 1]
 
@@ -54,8 +58,8 @@ chm = grid_canopy(lasnorm, res = 0.1, na.fill = "knnidw", k = 8)
 chm = raster::as.raster(chm)
 raster::plot(chm)
 
-#quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphics/tree segmentation/watershed/SRER Mesq. Tower Site CHM - MCC-Lidar Classing & KNN-IDW Rasterization")
-#dev.off()
+quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/Clustering:Tree Segmentation/OPTICS Outliers Removed/Alidar CHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
+dev.off()
 
 # smoothing post-process (e.g. 2x mean)
 kernel = matrix(1,3,3)
@@ -64,8 +68,12 @@ schm = raster::focal(chm, w = kernel, fun = mean)
 
 raster::plot(schm, col = height.colors(50)) # check the image
 
+quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/Clustering:Tree Segmentation/OPTICS Outliers Removed/Alidar SCHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
+dev.off()
+
+
 # save smoothed canopy height model as tif
-raster::writeRaster(schm, "Tlidar_OPTICS_Outliers_Removed_Smoothed_CHM.tif", format = "GTiff", overwrite = TRUE)
+raster::writeRaster(schm, "Alidar_OPTICS_Outliers_Removed_Smoothed_CHM.tif", format = "GTiff", overwrite = TRUE)
 
 
 # tree segmentation
@@ -79,9 +87,9 @@ tree = lasfilter(lasnorm, !is.na(treeID))
 plot(tree, color = "treeID", colorPalette = pastel.colors(100))
 
 #save tree point cloud (clustered point cloud):
-writeLAS(tree, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.las")
+writeLAS(tree, "ALidar_Clustered_By_Watershed_Segmentation.las")
 #write.csv(tree@data, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.csv")
-write_feather(tree@data, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather")
+write_feather(tree@data, "ALidar_Clustered_By_Watershed_Segmentation.feather")
 
 # Plotting raster with delineated crowns:
 library(raster)
@@ -89,4 +97,6 @@ contour = rasterToPolygons(crowns, dissolve = TRUE)
 
 plot(schm, col = height.colors(50))
 plot(contour, add = T)
+quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/Clustering:Tree Segmentation/OPTICS Outliers Removed/Alidar Segmented SCHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
+dev.off()
 

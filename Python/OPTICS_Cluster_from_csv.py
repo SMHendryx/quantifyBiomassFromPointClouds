@@ -15,9 +15,9 @@ import pandas
 
 
 eps = 8.3
-minNumSamples = 150
+minNumSamples = 15
 
-filePath = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/GreaterThan1mHAG/SfM_nonground_points.feather"
+filePath = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/GreaterThan1mHAG/A-lidar_nonground_points.feather"
 
 argControl = False
 if(argControl):
@@ -106,7 +106,7 @@ clusteredPoints = np.column_stack((X, labels.T))
 clustereddf = pandas.DataFrame(data = clusteredPoints)
 clustereddf.columns = ['X', 'Y', 'Z', 'Label']
 
-o_fname = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/GreaterThan1mHAG/OPTICS_clustered_points_eps_{0}_min_samples_{1}.feather".format(eps, minNumSamples)
+o_fname = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/GreaterThan1mHAG/OPTICS_clustered_points_eps_{0}_min_samples_{1}.feather".format(eps, minNumSamples)
 
 feather.write_dataframe(clustereddf, o_fname)
 

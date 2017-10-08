@@ -7,19 +7,27 @@ library(raster)
 library(rgeos)
 
 
-args = commandArgs(trailingOnly = TRUE)
-#args should be 1. directory, 2. input las file to clip, and 3. whether or not to plot
+argsControl = FALSE
+if(argsControl){
+  args = commandArgs(trailingOnly = TRUE)
+  #args should be 1. directory, 2. input las file to clip, and 3. whether or not to plot
 
-# test if there is at least one argument: if not, return an error
-if (length(args)==0) {
-  stop("At least one argument must be supplied (input file).n", call.=FALSE)
-} else if (length(args)==2) {
-  args[3] = FALSE
+  # test if there is at least one argument: if not, return an error
+  if (length(args)==0) {
+    stop("At least one argument must be supplied (input file).n", call.=FALSE)
+  } else if (length(args)==2) {
+    args[3] = FALSE
+  }
+
+  directoryPath = args[1]
+  file = args[2]
+  plotControl = args[3]
 }
 
-directoryPath = args[1]
-file = args[2]
-plotControl = args[3]
+directoryPath = "/Users/seanhendryx/Data/Lidar/SRER/AZ_Tucson_2011_000564/"
+#how was this projected??
+file = "UTMAZ_Tucson_2011_000564.las"
+plotControl = TRUE
 
 setwd(directoryPath)
 pointCloud = readLAS(file)

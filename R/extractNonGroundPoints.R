@@ -47,8 +47,8 @@ if(argsControl){
   writeControl = args[4]
 }
 
-inFile = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/Merged_Ground_Classified.las"
-outDirec = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/"
+inFile = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/Rectangular_UTMAZ_Tucson_2011_000564.las"
+outDirec = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/"
 plotControl = TRUE
 writeControl = FALSE
 
@@ -57,12 +57,12 @@ setwd(outDirec)
 las = readLAS(inFile)
 
 dtm = grid_terrain(las, res = .1, method = "knnidw")
-plot(dtm, main="SRER Mesquite Tower SfM DTM")
-quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/SfM/Ground Delineation/SRER Mesquite Tower SfM DTM.png")
+plot(dtm, main="SRER Mesquite Tower A-Lidar DTM")
+quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/SRER Mesquite Tower A-Lidar DTM.png")
 dev.off()
 
 lasnorm = lasnormalize(las, dtm)
-writeLAS(lasnorm, "SfM_study-area_HAG-Normalized.las")
+writeLAS(lasnorm, "A-Lidar_study-area_HAG-Normalized.las")
 #plot(lasnorm)
 
 #remove classified ground points:
@@ -72,11 +72,11 @@ plot(nonground)
 
 # Create GreaterThan1mHAG direc if doesn't exist:
 dir.create(file.path(outDirec, "GreaterThan1mHAG"))
-writeLAS(nonground, "GreaterThan1mHAG/SfM_nonground_points.las")
+writeLAS(nonground, "GreaterThan1mHAG/A-lidar_nonground_points.las")
 
 # Get csv
 ngPoints = nonground@data
-write.csv(ngPoints, "GreaterThan1mHAG/SfM_nonground_points.csv")
-write_feather(ngPoints, "GreaterThan1mHAG/SfM_nonground_points.feather")
+write.csv(ngPoints, "GreaterThan1mHAG/A-lidar_nonground_points.csv")
+write_feather(ngPoints, "GreaterThan1mHAG/A-lidar_nonground_points.feather")
 
 

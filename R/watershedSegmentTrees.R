@@ -1,3 +1,5 @@
+#Segments canopies from raster data using watershed algorithm
+
 # Clear workspace:
 rm(list=ls())
 
@@ -27,10 +29,10 @@ if(argsControl){
   writeControl = args[4]
 }
 
-inFile = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/Merged_Ground_Classified.las"
-outDirec = "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/"
-plotControl = TRUE
-writeControl = FALSE
+inFile = "Rectangular_UTMAZ_Tucson_2011_000564.las"
+outDirec = "/Users/seanhendryx/Data/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area"
+plotControl = FALSE
+writeControl = TRUE
 
 setwd(outDirec)
 #Read in las file:
@@ -41,24 +43,30 @@ dtm = grid_terrain(allPoints, res = .1, method = "knnidw")
 oheader = allPoints@header
 
 #normalize las
-dtm = grid_terrain(allPoints, res = .1, method = "knnidw")
 lasnorm = lasnormalize(allPoints, dtm)
 
 # compute a canopy image
 chm = grid_canopy(lasnorm, res = 0.1, na.fill = "knnidw", k = 8)
 chm = raster::as.raster(chm)
-raster::plot(chm)
-quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/SfM/Tree Segmentation/ SfM CHM - MCC-Lidar Classing & KNN-IDW Rasterization")
 
-dev.off()
+if(plotControl){
+  raster::plot(chm)
+  quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/Aerial Lidar CHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
+
+  dev.off()
+}
 
 # smoothing post-process (e.g. 2x mean)
 kernel = matrix(1,3,3)
 schm = raster::focal(chm, w = kernel, fun = mean)
 #schm = raster::focal(chm, w = kernel, fun = mean)
 
-raster::plot(schm, col = height.colors(50)) # check the image
-quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/SfM/Tree Segmentation/Smoothed SfM CHM - MCC-Lidar Classing & KNN-IDW Rasterization")
+if(plotControl){
+  raster::plot(schm, col = height.colors(50)) # check the image
+  quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/Aerial Lidar SCHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
+
+  dev.off()
+}
 
 # tree segmentation
 # ‘th’ Numeric. Number value below which a pixel cannot be a crown.
@@ -68,21 +76,27 @@ crowns = lastrees(lasnorm, "watershed", schm, th = 1, extra = TRUE)
 # Plotting point cloud of trees only:
 # without rendering points that are not assigned to a tree
 tree = lasfilter(lasnorm, !is.na(treeID))
+
 plot(tree, color = "treeID", colorPalette = pastel.colors(100))
 
-#save tree point cloud (clustered point cloud):
-writeLAS(tree, "SfM_allTilesGroundClassified_and_Clustered_By_Watershed_Segmentation.las")
-#write.csv(tree@data, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.csv")
-write_feather(tree@data, "SfM_allTilesGroundClassified_and_Clustered_By_Watershed_Segmentation.feather")
+if(writeControl){
+  #save tree point cloud (clustered point cloud):
+  writeLAS(tree, "ALidar_Clustered_By_Watershed_Segmentation.las")
+  #write.csv(tree@data, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.csv")
+  write_feather(tree@data, "Alidar_Clustered_By_Watershed_Segmentation.feather")
+}
 
 # Plotting raster with delineated crowns:
 library(raster)
 contour = rasterToPolygons(crowns, dissolve = TRUE)
 
-plot(schm, col = height.colors(50))
-plot(contour, add = T)
-quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/SfM/Tree Segmentation/Watershed Segmented Smoothed SfM CHM - MCC-Lidar Classing & KNN-IDW Rasterization")
+if(plotControl){
+  plot(schm, col = height.colors(50))
+  plot(contour, add = T)
+  quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/Watershed Segmented Smoothed ALidar & KNN-IDW Rasterization.png")
+}
 
-# save smoothed canopy height model as tif
-writeRaster(schm, "SfM_Smoothed_CHM.tif", format = "GTiff")
-
+if(writeControl){
+  # save smoothed canopy height model as tif
+  writeRaster(schm, "ALidar_Smoothed_CHM.tif", format = "GTiff")
+}

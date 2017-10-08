@@ -7,11 +7,30 @@ library(ggplot2)
 source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 
 
+
+argsControl = TRUE
+
+if(argsControl){
+  args = commandArgs(trailingOnly = TRUE)
+  #args: 1. directory in which to write (and from which to read if second argument is not specified), 2. input file
+  #args should be (complete paths with '/' after directories) 
+
+  # test if there is at least one argument: if not, return an error
+  if (length(args) < 1) {
+    stop("At least one argument must be supplied: working directory including .feather file of points.", call.=FALSE)
+  } else if (length(args)== 1) {
+    args[2] = "in_situ_points_with_cluster_assignments.feather"
+  }
+  direc = args[1]
+  inFile = args[2]
+}
+
+
 #getdata:
-setwd("/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/")
+setwd(direc)
 
 # read in points (labeled data):
-points = as.data.table(read_feather("in_situ_points_with_cluster_assignments.feather"))
+points = as.data.table(read_feather(inFile))
 
 #compute mean axis:
 points[,Mean_Axis := ((Major_Axis + Minor_Axis)/2)]

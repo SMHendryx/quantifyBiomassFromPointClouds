@@ -31,12 +31,15 @@ library(data.table)
 library(ggplot2)
 library(feather)
 library(lidR)
-source("/Users/seanhendryx/githublocal/quantifyBiomassFromPointClouds/R/assignPointsToClusters.R")
+source("/Users/seanmhendryx/githublocal/assignPointsToClusters/R/APTEC.R")
 
 
 #Run
-outDirec = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers"
-setwd(outDirec)
+writer = FALSE
+if(writer){
+  outDirec = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers"
+  setwd(outDirec)
+}
 
 # read in clustered point cloud:
 clusters = as.data.table(read_feather("ALidar_Clustered_By_Watershed_Segmentation.feather"))
@@ -56,19 +59,21 @@ points = points[Sample_ID %in% validIDs,]
 # RUN THESIS ALGORITHMS:
 #buffer equal to 3 qualitative best from graphs:
 buff = 3
-assignedPoints = assignPointsToExistingClusters(points, clusters, buffer = buff)
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+# Run APTEC
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+assignedPoints = APTEC(points, clusters, buffer = buff)
+
 numPointsWithInThresh = nrow(assignedPoints[closest_cluster_outside_threshold==FALSE])
 numPointsWithInThresh
 
-setwd(paste0("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer", buff))
-write_feather(assignedPoints, paste0("in_situ_points_with_cluster_assignments_buffer_", buff, ".feather"))
+if(writer){
+  setwd(paste0("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer", buff))
+  write_feather(assignedPoints, paste0("in_situ_points_with_cluster_assignments_buffer_", buff, ".feather"))
+}
 
-# Now run checkIfPointRepresentsMoreThanOneCluster
-#I am here:
-startTime2 = Sys.time()
-#assignedPoints = checkIfPointRepresentsMoreThanOneCluster(assignedPoints, clusters)
 endTime = Sys.time()
-endTime - startTime2
 
 endTime - startTime
 

@@ -64,4 +64,4 @@ correspondWatershedClusters
 crossValidateModel.R
 
 # Run model to produce fine-scale, biomass-density raster:
-Rscript runModel.R
+Rscript predictBiomassOfArea.R

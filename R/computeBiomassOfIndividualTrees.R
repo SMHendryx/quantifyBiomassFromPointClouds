@@ -1,4 +1,4 @@
-# Computes the biomass of deterministic allometric equations
+# Computes the biomass of individual trees using deterministic allometric equations
 
 library(feather)
 library(lidR)

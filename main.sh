@@ -4,6 +4,8 @@
 # File paths currently hardcoded inside scripts
 
 
+cd R
+
 # First, clip point cloud to study area if necessary:
 Rscript clipPointCloudsToStudyArea.R /Users/seanhendryx/Data/SfMData/SRER/20160519Flights/mildDepthFiltering MILDDEPTHFILTERINGOptimized_GeoreferencedWithUpdatealtizureImages.las 
 

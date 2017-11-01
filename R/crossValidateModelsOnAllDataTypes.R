@@ -18,6 +18,11 @@ source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 #
 ####-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------####
 
+se = function(x){
+  # Computes standard error of x
+  return(sd(x)/sqrt(length(x)))
+}
+
 # To compute RMSE, first get errors:
 getErrors = function(measured, predicted){
   return(predicted - measured)
@@ -305,6 +310,8 @@ if(write){
   write_feather(cumulativeErrors, paste0("Cumulative_Model_Errors.feather"))
 }
 
+# Compute standard error of modelPredictions:
+print("Estimated standard error of the biomass")
 
 ####-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------####
 #

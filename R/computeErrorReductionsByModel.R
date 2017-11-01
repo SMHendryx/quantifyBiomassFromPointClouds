@@ -2,11 +2,17 @@
 
 library(data.table)
 library(feather)
+library(ggplot2)
 
 
 ####---------------------------------------------------------------------------------------------------####
 #         FUNCTION DEFINITIONS                                                                         ####
 ####---------------------------------------------------------------------------------------------------####
+
+se = function(x){
+  # Computes standard error of x
+  return(sd(x)/sqrt(length(x)))
+}
 
 rmse = function(errors){
   # Computes Root Mean Square Error
@@ -19,6 +25,7 @@ mae = function(errors){
   # will work on a list of error values or a single error value (in which case, the same value is returned)
   return(mean(abs(errors)))
 }
+
 
 
 ####---------------------------------------------------------------------------------------------------####
@@ -55,4 +62,15 @@ for(dataset_i in datasets){
   }
 }
 
+# Compute standard error of modelPredictions:
+print("Estimated standard error of the error:")
+se(dt[model=="RFCF_ESA" & dataset == "A-lidar", error])
+
 write.csv(errorMetrics, "errorMetrics.csv")
+
+#make factors
+dt[,dataset := as.factor(dataset)]
+dt[, model := as.factor(model)]
+
+bp = ggplot(data = dt, mapping = aes(x = model, y = log(abs(error)))) + geom_boxplot() + facet_grid(. ~ dataset) + theme_bw()
+bp

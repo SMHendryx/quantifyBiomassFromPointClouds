@@ -55,7 +55,7 @@ Rscript watershedSegmentTrees_afterOPTICSOutliersRemoved.R
 Rscript run_assignPointsToClusters_on_watershedSegmentedTrees.R
 
 # Compute biomass of in situ data:
-Rscript computeBiomass.R /Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3 in_situ_points_with_cluster_assignments_buffer_3.feather
+Rscript computeBiomassOfIndividualTrees.R /Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3 in_situ_points_with_cluster_assignments_buffer_3.feather
 
 # Extract Features: 
 extractFeatures.R

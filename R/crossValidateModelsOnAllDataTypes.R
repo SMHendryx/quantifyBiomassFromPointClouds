@@ -59,7 +59,7 @@ testModel = function(LF, model){
 circArea = function(r){return(pi * (r^2))}
 
 testDeterministic = function(LF){
-  # Returns deterministic predictions
+  # Returns deterministic, ecosystem state allometric (ecoAllom) predictions
   
   LF = copy(LF)
   #compute PC cluster mean axis:
@@ -295,14 +295,14 @@ for(directory in directories){
 write = TRUE
 if(write){
   setwd(resultsDirec)
-  write.csv(errors, paste0("Model_Errors_on_",datasetString, "_Data.csv"))
-  write_feather(errors, paste0("Model_Errors_on_",datasetString, "_Data.feather"))
+  write.csv(errors, paste0("Model_Errors.csv"))
+  write_feather(errors, paste0("Model_Errors.feather"))
 }
 
 if(write){
   setwd(resultsDirec)
-  write.csv(cumulativeErrors, paste0("Cumulative_Model_Errors_on_",datasetString, "_Data.csv"))
-  write_feather(cumulativeErrors, paste0("Cumulative_Model_Errors_on_",datasetString, "_Data.feather"))
+  write.csv(cumulativeErrors, paste0("Cumulative_Model_Errors.csv"))
+  write_feather(cumulativeErrors, paste0("Cumulative_Model_Errors.feather"))
 }
 
 

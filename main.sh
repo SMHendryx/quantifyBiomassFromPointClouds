@@ -73,3 +73,6 @@ crossValidateModel.R
 
 # Run model to produce fine-scale, biomass-density raster:
 Rscript predictBiomassOfArea.R
+
+# compare performance of all models on all data types:
+crossValidateModelsOnAllDataTypes.R

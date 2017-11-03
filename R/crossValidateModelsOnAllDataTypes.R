@@ -9,7 +9,7 @@ library(feather)
 library(ggplot2)
 library(randomForest)
 library(plyr)
-source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
+source("~/githublocal/quantifyBiomassFromPointClouds/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 
 
 ####-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------####
@@ -166,7 +166,7 @@ crossValidate = function(LF, k = 10, LOOCV = FALSE, write = TRUE){
 #
 ####-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------####
 
-resultsDirec = "/Users/seanhendryx/DATA/thesisResults"
+resultsDirec = "/Users/seanmhendryx/Data/thesis/crossValResults"
 
 datasetStrings = c("T-lidar", "A-lidar", "SfM")
 
@@ -310,8 +310,17 @@ if(write){
   write_feather(cumulativeErrors, paste0("Cumulative_Model_Errors.feather"))
 }
 
-# Compute standard error of modelPredictions:
-print("Estimated standard error of the biomass")
+# TODO:
+#print mean error and standard error of error for the best performing model of each dataset:
+datasets = unique(errors[,dataset])
+for(dataset_i in datasets){
+  print(dataset_i)  
+  print("Mean error:")
+  print(mean(errors[dataset==dataset_i]))
+  # Compute standard error of modelPredictions:
+  print("Estimated standard error of the biomass")
+
+}
 
 ####-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------####
 #

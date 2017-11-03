@@ -23,10 +23,10 @@ source("~/githublocal/quantifyBiomassFromPointClouds/quantifyBiomassFromPointClo
 
 
 #get original header:
-setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/SfM/rerunWatershed/")
+setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/A-lidar/rerunWatershed/")
 
 # read in original las file
-las = readLAS("Merged_Ground_Classified.las")
+las = readLAS("Rectangular_UTMAZ_Tucson_2011_000564.las")
 # get header:
 oheader = las@header
 
@@ -39,7 +39,7 @@ DT = as.data.table(read_feather("OPTICS_clustered_points_eps_8.3_min_samples_150
 #lasOutliersRemoved = LAS(DT, header = oheader)
 
 #then change working directory for writing output:
-setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/SfM/rerunWatershed/output_20171103")
+setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/A-lidar/rerunWatershed/output_20171103")
 
 # Add Classification, all points should be nonground (1):
 DT[,Classification := 1]
@@ -84,6 +84,7 @@ lasnorm = LAS(DT, oheader)
 # compute a canopy image
 chm = grid_canopy(lasnorm, res = 0.1, na.fill = "knnidw", k = 8)
 chm = raster::as.raster(chm)
+dev.new()
 raster::plot(chm)
 
 #quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/Clustering:Tree Segmentation/OPTICS Outliers Removed/Alidar CHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
@@ -94,19 +95,19 @@ kernel = matrix(1,3,3)
 schm = raster::focal(chm, w = kernel, fun = mean)
 #schm = raster::focal(chm, w = kernel, fun = mean)
 
+dev.new()
 raster::plot(schm, col = height.colors(50)) # check the image
-quartz.save("SfM_SCHM.png")
+quartz.save("A-lidar_SCHM.png")
 
 #quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/Clustering:Tree Segmentation/OPTICS Outliers Removed/Alidar SCHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
 #dev.off()
 
 
 # save smoothed canopy height model as tif
-raster::writeRaster(schm, "SfM_OPTICS_Outliers_Removed_Smoothed_CHM_no_edge_stretch.tif", format = "GTiff", overwrite = TRUE)
-
+raster::writeRaster(schm, "A-lidar_OPTICS_Outliers_Removed_Smoothed_CHM_no_edge_stretch.tif", format = "GTiff", overwrite = TRUE)
 
 # tree segmentation
-# ‘th’ Numeric. Number value below which a pixel cannot be a crown.
+# 'th' Numeric. Number value below which a pixel cannot be a crown.
 #Default 2
 crowns = lastrees(lasnorm, "watershed", schm, th = 1, extra = TRUE)
 
@@ -116,16 +117,17 @@ tree = lasfilter(lasnorm, !is.na(treeID))
 plot(tree, color = "treeID", colorPalette = pastel.colors(100))
 
 #save tree point cloud (clustered point cloud):
-writeLAS(tree, "SfM_Clustered_By_Watershed_Segmentation.las")
+writeLAS(tree, "A-lidar_Clustered_By_Watershed_Segmentation.las")
 #write.csv(tree@data, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.csv")
-write_feather(tree@data, "SfM_Clustered_By_Watershed_Segmentation.feather")
+write_feather(tree@data, "A-lidar_Clustered_By_Watershed_Segmentation.feather")
 
 # Plotting raster with delineated crowns:
 library(raster)
 contour = rasterToPolygons(crowns, dissolve = TRUE)
 
+dev.new()
 plot(schm, col = height.colors(50))
 plot(contour, add = T)
-quartz.save("SfM Segmented SCHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
+quartz.save("A-lidar Segmented SCHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
 #dev.off()
 

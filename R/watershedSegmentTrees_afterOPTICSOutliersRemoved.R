@@ -23,16 +23,19 @@ source("~/githublocal/quantifyBiomassFromPointClouds/quantifyBiomassFromPointClo
 
 
 #get original header:
-setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/")
+setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/SfM/rerunWatershed/")
 
 # read in original las file
-las = readLAS("all20TilesGroundClassified.las")
+las = readLAS("Merged_Ground_Classified.las")
 # get header:
 oheader = las@header
 
+groundPoints = las %>% lasfilter(Classification == 2)
+plot(groundPoints)
+
 # read in OPTICS outliers removed, non ground points
 #setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/GreaterThan1mHAG/")
-DT = as.data.table(read_feather("OPTICS_outliers_removed_points_eps_8.3_min_samples_150.feather"))
+DT = as.data.table(read_feather("OPTICS_clustered_points_eps_8.3_min_samples_150.feather"))
 #lasOutliersRemoved = LAS(DT, header = oheader)
 
 #then change working directory for writing output:

@@ -95,6 +95,7 @@ schm = raster::focal(chm, w = kernel, fun = mean)
 #schm = raster::focal(chm, w = kernel, fun = mean)
 
 raster::plot(schm, col = height.colors(50)) # check the image
+quartz.save("SfM_SCHM.png")
 
 #quartz.save("/Users/seanhendryx/Google Drive/THE UNIVERSITY OF ARIZONA (UA)/THESIS/Graphs/Alidar/Clustering:Tree Segmentation/OPTICS Outliers Removed/Alidar SCHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
 #dev.off()

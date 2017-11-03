@@ -37,12 +37,12 @@ source("/Users/seanmhendryx/githublocal/assignPointsToClusters/R/APTEC.R")
 #Run
 writer = TRUE
 if(writer){
-  outDirec = "/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101/"
+  outDirec = "/Users/seanmhendryx/Data/thesis/Processed_Data/SfM/rerunWatershed/output_20171103/"
   setwd(outDirec)
 }
 
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("TLidar_Clustered_By_Watershed_Segmentation.feather"))
+clusters = as.data.table(read_feather("SfM_Clustered_By_Watershed_Segmentation.feather"))
 
 #remove ground points and outlier clusters coded as 0
 clusters = clusters[Classification != 2]
@@ -63,7 +63,7 @@ points = points[Sample_ID %in% validIDs,]
 
 # RUN THESIS ALGORITHMS:
 #buffer equal to 3 qualitative best from graphs:
-buff = 10
+buff = 3
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 # Run APTEC

@@ -30,8 +30,8 @@ las = readLAS("Merged_Ground_Classified.las")
 # get header:
 oheader = las@header
 
-groundPoints = las %>% lasfilter(Classification == 2)
-plot(groundPoints)
+#groundPoints = las %>% lasfilter(Classification == 2)
+#plot(groundPoints)
 
 # read in OPTICS outliers removed, non ground points
 #setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/GreaterThan1mHAG/")
@@ -39,7 +39,7 @@ DT = as.data.table(read_feather("OPTICS_clustered_points_eps_8.3_min_samples_150
 #lasOutliersRemoved = LAS(DT, header = oheader)
 
 #then change working directory for writing output:
-setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101")
+setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/SfM/rerunWatershed/output_20171103")
 
 # Add Classification, all points should be nonground (1):
 DT[,Classification := 1]
@@ -101,7 +101,7 @@ raster::plot(schm, col = height.colors(50)) # check the image
 
 
 # save smoothed canopy height model as tif
-raster::writeRaster(schm, "Tlidar_OPTICS_Outliers_Removed_Smoothed_CHM_no_edge_stretch.tif", format = "GTiff", overwrite = TRUE)
+raster::writeRaster(schm, "SfM_OPTICS_Outliers_Removed_Smoothed_CHM_no_edge_stretch.tif", format = "GTiff", overwrite = TRUE)
 
 
 # tree segmentation
@@ -115,9 +115,9 @@ tree = lasfilter(lasnorm, !is.na(treeID))
 plot(tree, color = "treeID", colorPalette = pastel.colors(100))
 
 #save tree point cloud (clustered point cloud):
-writeLAS(tree, "TLidar_Clustered_By_Watershed_Segmentation.las")
+writeLAS(tree, "SfM_Clustered_By_Watershed_Segmentation.las")
 #write.csv(tree@data, "all20TilesGroundClassified_and_Clustered_By_Watershed_Segmentation.csv")
-write_feather(tree@data, "TLidar_Clustered_By_Watershed_Segmentation.feather")
+write_feather(tree@data, "SfM_Clustered_By_Watershed_Segmentation.feather")
 
 # Plotting raster with delineated crowns:
 library(raster)
@@ -125,6 +125,6 @@ contour = rasterToPolygons(crowns, dissolve = TRUE)
 
 plot(schm, col = height.colors(50))
 plot(contour, add = T)
-quartz.save("Tlidar Segmented SCHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
+quartz.save("SfM Segmented SCHM - MCC-Lidar Classing & KNN-IDW Rasterization.png")
 #dev.off()
 

@@ -48,10 +48,11 @@ Rscript extractNonGroundPoints.R
 python run_OPTICS.py
 Rscript remove_OPTICS_outliers.R 
 
+# Need to rerun SfM from here:
 # then run watershed on point cloud that doesn't have outliers:
 Rscript watershedSegmentTrees_afterOPTICSOutliersRemoved.R
 
-# set up training and validation data:  # Need to rerun SfM from here:
+# set up training and validation data: 
 Rscript run_assignPointsToClusters_on_watershedSegmentedTrees.R
 
 # Compute biomass of in situ data:

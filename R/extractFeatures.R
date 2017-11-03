@@ -57,7 +57,7 @@ toMerge[,closest_cluster_outside_threshold := NULL]
 LF = merge(DT, toMerge, by.x = "Cluster_ID", by.y = "cluster_ID")
 
 #Sum in situ mass by cluster (i.e. "Cluster_ID" column)
-LF[,in_situ_AGB_summed_by_cluster := sum(AGB), by = Cluster_ID]
+LF[,in_situ_AGB_summed_by_cluster := sum(na.omit(AGB)), by = Cluster_ID]
 
 #Remove unnecessary columns for training model:
 LF[,Sample_ID := NULL]

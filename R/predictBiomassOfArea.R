@@ -19,6 +19,7 @@ source("~/githublocal/quantifyBiomassFromPointClouds/quantifyBiomassFromPointClo
 #------------------------------------------------------------------------------------------------------------------------------#
 
 trainRF = function(LF){
+  print("Training random forest.")
   model = randomForest(LF$Label ~ ., data = LF)
   return(model)
 }
@@ -111,14 +112,18 @@ se = function(x){
 #                                                                                                                                                                                                              ####
 ####-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------####
 
-# Read in total dataset for prediction:
-directory = "/Users/seanmhendryx/Data/thesis/Processed_Data/A-lidar/predictBiomassOfArea"
+# Read in total pointcloud for prediction:
+directory = "/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101"
 setwd(directory)
 
-clusteredStudayAreaPointCloud = "ALidar_Clustered_By_Watershed_Segmentation.feather"
+clusteredStudayAreaPointCloud = "TLidar_Clustered_By_Watershed_Segmentation.feather"
 clusters = as.data.table(read_feather(clusteredStudayAreaPointCloud))
 
-plotter = TRUE
+#remove ground points and outlier clusters coded as 0
+clusters = clusters[Classification != 2]
+clusters = clusters[treeID != 0]
+
+plotter = FALSE
 if(plotter){
   #plot(clusters$X, clusters$Y, col=as.factor(clusters$treeID))
   cbf = c(#"#000000", 
@@ -204,7 +209,7 @@ if(plotter){
     "#c46d53",
     "#e26a4a",
     "#aa612f")
-
+  #
   cbf240 = c("#9367d4",
     "#2dae15",
     "#724fe2",
@@ -479,13 +484,16 @@ area = .791335
 biomassDensity = totalBiomass/area
 print("Estimated biomass density of study area from 2011 aerial lidar (kg/ha):")
 biomassDensity
-# 21995.74 kg/hectare
+# T-lidar:  29228.95 kg/hectare
+# A-lidar: 21995.74 kg/hectare
 
 areaSqM = 7913.35
 biomassDensity = totalBiomass/areaSqM
 print("Estimated biomass density of study area from 2011 aerial lidar (kg/sq. meter):")
 biomassDensity
-# 2.199574
+# T-lidar:  2.922895 kg/m^2
+# A-lidar: 2.199574 kg/m^2
+
 
 
 #

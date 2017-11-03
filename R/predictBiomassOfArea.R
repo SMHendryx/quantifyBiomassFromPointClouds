@@ -97,6 +97,11 @@ extractFeatures = function(clusters){
   return(DT)
 }
 
+se = function(x){
+  # Computes standard error of x
+  return(sd(x)/sqrt(length(x)))
+}
+
 # END FUNCTION DEFINTIONS
 
 
@@ -106,7 +111,7 @@ extractFeatures = function(clusters){
 #                                                                                                                                                                                                              ####
 ####-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------####
 
-# Read in data:
+# Read in total dataset for prediction:
 directory = "/Users/seanmhendryx/Data/thesis/Processed_Data/A-lidar/predictBiomassOfArea"
 setwd(directory)
 

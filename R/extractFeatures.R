@@ -8,11 +8,11 @@ library(ggplot2)
 
 discardIntensity = TRUE
 
-setwd("/Users/seanhendryx/Data/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/")
+setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101")
 
 # Read in data:
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("Alidar_Clustered_By_Watershed_Segmentation.feather"))
+clusters = as.data.table(read_feather("Tlidar_Clustered_By_Watershed_Segmentation.feather"))
 #colnames(clusters)[1] = 'X'
 
 '%!in%' = function(x,y)!('%in%'(x,y))
@@ -23,7 +23,7 @@ if("Intensity" %!in% colnames(clusters)){
 }
 
 #redefining rLiDAR's crownMetrics to allow for NAs in Intensity since not all point clouds have intensity (also extended default precision to 5 decimal places):
-source("~/githublocal/quantifyBiomassFromPointClouds/R/CrownMetrics.R")
+source("~/githublocal/quantifyBiomassFromPointClouds/quantifyBiomassFromPointClouds/R/CrownMetrics.R")
 metrics = CrownMetrics(as.matrix(clusters[,.(X,Y,Z,Intensity, treeID)]), na_rm = TRUE, digits = 5)
 
 DT = as.data.table(metrics)
@@ -43,7 +43,7 @@ if(discardIntensity){
 }
 
 # read in points (labeled data):
-setwd("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3/")
+setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101/")
 points = as.data.table(read_feather("in_situ_biomass_points_with_cluster_assignments.feather"))
 
 #These next three lines of code should be moved to extractFeatures.R:

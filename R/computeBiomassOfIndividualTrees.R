@@ -4,7 +4,7 @@ library(feather)
 library(lidR)
 library(data.table)
 library(ggplot2)
-source("~/githublocal/quantifyBiomassFromPointClouds/R/allometricEqns.R")
+source("~/githublocal/quantifyBiomassFromPointClouds/quantifyBiomassFromPointClouds/R/allometricEqns.R")
 
 
 

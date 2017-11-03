@@ -35,19 +35,24 @@ source("/Users/seanmhendryx/githublocal/assignPointsToClusters/R/APTEC.R")
 
 
 #Run
-writer = FALSE
+writer = TRUE
 if(writer){
-  outDirec = "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers"
+  outDirec = "/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101/"
   setwd(outDirec)
 }
 
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("ALidar_Clustered_By_Watershed_Segmentation.feather"))
+clusters = as.data.table(read_feather("TLidar_Clustered_By_Watershed_Segmentation.feather"))
+
+#remove ground points and outlier clusters coded as 0
+clusters = clusters[Classification != 2]
+clusters = clusters[treeID != 0]
 # add column named "Label", since that is what assignPointsToClusters is looking for:
 clusters[,Label := treeID]
 
+
 # read in points:
-points = as.data.table(read.csv("/Users/seanhendryx/DATA/SRERInSituData/SRER_Mesq_Tower_In_Situ_Allometry/inSituCoordinatesAndMeasurements.csv"))
+points = as.data.table(read.csv("/Users/seanmhendryx/Data/thesis/insitu/inSituCoordinatesAndMeasurements.csv"))
 
 # Make sure column cluster_ID does not exist:
 points[,cluster_ID := NULL]
@@ -58,7 +63,7 @@ points = points[Sample_ID %in% validIDs,]
 
 # RUN THESIS ALGORITHMS:
 #buffer equal to 3 qualitative best from graphs:
-buff = 3
+buff = 10
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 # Run APTEC
@@ -69,7 +74,7 @@ numPointsWithInThresh = nrow(assignedPoints[closest_cluster_outside_threshold==F
 numPointsWithInThresh
 
 if(writer){
-  setwd(paste0("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer", buff))
+  #setwd(paste0("/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer", buff))
   write_feather(assignedPoints, paste0("in_situ_points_with_cluster_assignments_buffer_", buff, ".feather"))
 }
 

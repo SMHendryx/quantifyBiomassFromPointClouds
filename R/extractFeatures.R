@@ -8,11 +8,11 @@ library(ggplot2)
 
 discardIntensity = TRUE
 
-setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101")
+setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/A-lidar/rerunWatershed/output_20171103")
 
 # Read in data:
 # read in clustered point cloud:
-clusters = as.data.table(read_feather("Tlidar_Clustered_By_Watershed_Segmentation.feather"))
+clusters = as.data.table(read_feather("A-lidar_Clustered_By_Watershed_Segmentation.feather"))
 #colnames(clusters)[1] = 'X'
 
 '%!in%' = function(x,y)!('%in%'(x,y))
@@ -43,7 +43,7 @@ if(discardIntensity){
 }
 
 # read in points (labeled data):
-setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101/")
+setwd("/Users/seanmhendryx/Data/thesis/Processed_Data/A-lidar/rerunWatershed/output_20171103/")
 points = as.data.table(read_feather("in_situ_biomass_points_with_cluster_assignments.feather"))
 
 #These next three lines of code should be moved to extractFeatures.R:

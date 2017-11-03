@@ -113,10 +113,10 @@ se = function(x){
 ####-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------####
 
 # Read in total pointcloud for prediction:
-directory = "/Users/seanmhendryx/Data/thesis/Processed_Data/SfM/rerunWatershed/output_20171103"
+directory = "/Users/seanmhendryx/Data/thesis/Processed_Data/A-lidar/rerunWatershed/output_20171103"
 setwd(directory)
 
-clusteredStudayAreaPointCloud = "SfM_Clustered_By_Watershed_Segmentation.feather"
+clusteredStudayAreaPointCloud = "A-lidar_Clustered_By_Watershed_Segmentation.feather"
 clusters = as.data.table(read_feather(clusteredStudayAreaPointCloud))
 
 #remove ground points and outlier clusters coded as 0
@@ -490,11 +490,12 @@ if(getRFPreds){
   print(biomassDensity)
 
   areaSqM = 7913.35
-  biomassDensity = totalBiomass/areaSqM
+  RFbiomassDensity = totalBiomass/areaSqM
   print("Estimated biomass density of study area from 2011 aerial lidar (kg/sq. meter):")
-  print(biomassDensity)
+  print(RFbiomassDensity)
   # T-lidar: 3.438693 kg/sq. meter
   # SfM: 3.41046 kg/sq meter
+  # A-lidar: 4.345713 kg/sq. meter
 }
 
 print("RFCFESA AGB density estimate:")
@@ -509,15 +510,17 @@ biomassDensity = totalBiomass/area
 print("Estimated biomass density of study area from 2011 aerial lidar (kg/ha):")
 biomassDensity
 # T-lidar:  29228.95 kg/hectare
-# A-lidar: 21995.74 kg/hectare
+# A-lidar(before inclusion of na.omit() in summing cluster biomass): 21995.74 kg/hectare
+# A- lidar: 26777.57
 
 areaSqM = 7913.35
 biomassDensity = totalBiomass/areaSqM
 print("Estimated biomass density of study area from 2011 aerial lidar (kg/sq. meter):")
 biomassDensity
 # T-lidar:  2.922895 kg/m^2
-# A-lidar: 2.199574 kg/m^2
+# A-lidar(before inclusion of na.omit() in summing cluster biomass): 2.199574 kg/m^2
 # SfM: 2.059425 kg/m^2
+# A-lidar: 2.677757 kg/m^2
 
 
 

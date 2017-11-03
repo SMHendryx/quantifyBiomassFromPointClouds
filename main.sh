@@ -49,8 +49,11 @@ python run_OPTICS.py
 Rscript remove_OPTICS_outliers.R 
 
 
+
+# Run A-lidar from here 
 # then run watershed on point cloud that doesn't have outliers:
-Rscript watershedSegmentTrees_afterOPTICSOutliersRemoved.R
+Rscript watershedSegmentTrees.R
+# if outliers: Rscript watershedSegmentTrees_afterOPTICSOutliersRemoved.R (e.g. T-lidar dataset)
 
 # set up training and validation data: 
 Rscript run_assignPointsToClusters_on_watershedSegmentedTrees.R

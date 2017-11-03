@@ -113,10 +113,10 @@ se = function(x){
 ####-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------####
 
 # Read in total pointcloud for prediction:
-directory = "/Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101"
+directory = "/Users/seanmhendryx/Data/thesis/Processed_Data/SfM/rerunWatershed/output_20171103"
 setwd(directory)
 
-clusteredStudayAreaPointCloud = "TLidar_Clustered_By_Watershed_Segmentation.feather"
+clusteredStudayAreaPointCloud = "SfM_Clustered_By_Watershed_Segmentation.feather"
 clusters = as.data.table(read_feather(clusteredStudayAreaPointCloud))
 
 #remove ground points and outlier clusters coded as 0
@@ -474,6 +474,30 @@ F[,Cluster_ID := NULL]
 
 modelPredictions = runModel(RF, F)
 
+getRFPreds = TRUE
+if(getRFPreds){
+  print("RFCF AGB density estimate:")
+  RFPredictions = runRF(RF, F)
+  # Sum biomass of all clusters to get estimate of total study area biomass:
+  print("Summed biomass of all clusters to get estimate of total study area biomass:")
+  totalBiomass = sum(RFPredictions)
+  print(totalBiomass)
+
+  # Study area is: covered 7913.35 square meters (or .791335 hectares)
+  area = .791335
+  biomassDensity = totalBiomass/area
+  print("Estimated biomass density of study area from 2011 aerial lidar (kg/ha):")
+  print(biomassDensity)
+
+  areaSqM = 7913.35
+  biomassDensity = totalBiomass/areaSqM
+  print("Estimated biomass density of study area from 2011 aerial lidar (kg/sq. meter):")
+  print(biomassDensity)
+  # T-lidar: 3.438693 kg/sq. meter
+  # SfM: 3.41046 kg/sq meter
+}
+
+print("RFCFESA AGB density estimate:")
 # Sum biomass of all clusters to get estimate of total study area biomass:
 print("Summed biomass of all clusters to get estimate of total study area biomass:")
 totalBiomass = sum(modelPredictions)
@@ -493,6 +517,7 @@ print("Estimated biomass density of study area from 2011 aerial lidar (kg/sq. me
 biomassDensity
 # T-lidar:  2.922895 kg/m^2
 # A-lidar: 2.199574 kg/m^2
+# SfM: 2.059425 kg/m^2
 
 
 

@@ -48,15 +48,17 @@ Rscript extractNonGroundPoints.R
 python run_OPTICS.py
 Rscript remove_OPTICS_outliers.R 
 
-# Need to rerun SfM from here:
+
 # then run watershed on point cloud that doesn't have outliers:
 Rscript watershedSegmentTrees_afterOPTICSOutliersRemoved.R
 
 # set up training and validation data: 
 Rscript run_assignPointsToClusters_on_watershedSegmentedTrees.R
 
+# Need to rerun SfM from here:
+
 # Compute biomass of in situ data:
-Rscript computeBiomassOfIndividualTrees.R /Users/seanmhendryx/Data/thesis/Processed_Data/T-lidar/rerunWatershed/output_20171101 in_situ_points_with_cluster_assignments_buffer_10.feather
+Rscript computeBiomassOfIndividualTrees.R /Users/seanmhendryx/Data/thesis/Processed_Data/SfM/rerunWatershed/output_20171103 in_situ_points_with_cluster_assignments_buffer_3.feather
 
 # Extract Features: 
 extractFeatures.R

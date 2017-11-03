@@ -170,9 +170,9 @@ resultsDirec = "/Users/seanhendryx/DATA/thesisResults"
 
 datasetStrings = c("T-lidar", "A-lidar", "SfM")
 
-directories = c("/Users/seanhendryx/DATA/Lidar/SRER/maxLeafAreaOctober2015/rectangular_study_area/classified/watershed_after_remove_OPTICS_outliers", 
-                  "/Users/seanhendryx/DATA/Lidar/SRER/AZ_Tucson_2011_000564/rectangular_study_area/watershed_after_remove_OPTICS_outliers/buffer3", 
-                  "/Users/seanhendryx/DATA/SfMData/SRER/20160519Flights/mildDepthFiltering/rectangular_study_area/below_ground_points_removed/classified/mcc-s_point20_-t_point05/buffer3/")
+directories = c("/Users/seanmhendryx/Data/thesis/reRunCrossValAllDatTypes20171103/T-lidar", 
+                  "/Users/seanmhendryx/Data/thesis/reRunCrossValAllDatTypes20171103/A-lidar", 
+                  "/Users/seanmhendryx/Data/thesis/reRunCrossValAllDatTypes20171103/SfM")
 
 i = 1
 for(directory in directories){

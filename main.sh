@@ -76,3 +76,5 @@ Rscript predictBiomassOfArea.R
 
 # compare performance of all models on all data types:
 crossValidateModelsOnAllDataTypes.R
+
+computeErrorReductionsByModel

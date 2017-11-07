@@ -33,7 +33,7 @@ mae = function(errors){
 ####---------------------------------------------------------------------------------------------------####
 
 # Get data:
-direc = "/Users/seanmhendryx/Data/thesis/thesisResults"
+direc = "/Users/seanmhendryx/Data/thesis/crossValResults"
 setwd(direc)
 
 dt = as.data.table(read_feather("Model_Errors.feather"))
@@ -67,6 +67,9 @@ print("Estimated standard error of the error:")
 se(dt[model=="RFCF_ESA" & dataset == "A-lidar", error])
 
 write.csv(errorMetrics, "errorMetrics.csv")
+
+#best performing model:
+aggregate(errorMetrics[, 3:4], list(errorMetrics$model), mean)
 
 #make factors
 dt[,dataset := as.factor(dataset)]

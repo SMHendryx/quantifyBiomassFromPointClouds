@@ -224,8 +224,10 @@ for(directory in directories){
   #Rename columns for consistency:
   #setnames(x,old,new)
 
+  # Save column of observed
+  observed = results$Actual
 
-  eDT = as.data.table(cbind(modelErrors, deterministicErrors, mesqAssumptionErrors, RFEcoAlloErrors))
+  eDT = as.data.table(cbind(modelErrors, deterministicErrors, mesqAssumptionErrors, RFEcoAlloErrors, observed))
   eDT[,fold := seq(nrow(eDT))]
   setkey(eDT, fold)
 
@@ -237,7 +239,7 @@ for(directory in directories){
   setnames(eDT, "mesqAssumptionErrors", "PV")
   setnames(eDT, "RFEcoAlloErrors", "RFCF_ESA")
 
-  melted = melt(eDT, id.vars = "fold")
+  melted = melt(eDT, id.vars = c("fold", "observed"))
 
   setnames(melted, "value", "error")
   setnames(melted, "variable", "model")
@@ -248,7 +250,7 @@ for(directory in directories){
   if(i == 1){
     errors = copy(melted)
   } else {
-    errors = rbind(melted, errors)
+    errors = rbind(errors, melted)
   }
 
   # Make cumulative errors data.table:

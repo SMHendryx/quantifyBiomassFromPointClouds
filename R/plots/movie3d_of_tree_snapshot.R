@@ -72,6 +72,57 @@ play3dTree = function(las,  displayDims = c(2880, 1800)){
 
 plot3dTree = function(las, )
 
+save3dMovieFrames = function(las, displayDims = c(2880, 1800), axis = c(.25, .75, 1)){
+  # saves 3d movie in current working direc. Does not return object. Will overwrite movie.gif and movie.mov if existing
+  lasData = las@data
+  rgl.openWindow(width = displayDims[1], height = displayDims[2])
+  rgl.viewpoint(phi = -90, zoom = .475)
+  rgl.points(lasData$X, lasData$Y, lasData$Z, color = set.colors(lasData$Z, palette = height.colors(unique(lasData$Z))))
+  dir.create("animation")
+  for (i in 1:90) {
+    view3d(userMatrix=rotationMatrix(2*pi * i/90, axis[1], axis[2], axis[3]))
+    rgl.snapshot(filename=paste("animation/frame-",
+      sprintf("%03d", i), ".png", sep=""))
+  }
+}
+
+save3dMovieRGBFrames = function(las, displayDims = c(2880, 1800), axis = c(.25, .75, 1), zoomFactor = .75, numFrames = 180){
+  # saves 3d movie in current working direc. Does not return object. Will overwrite movie.gif and movie.mov if existing
+  lasData = las@data
+  rgl.openWindow(width = displayDims[1], height = displayDims[2])
+  rgl.viewpoint(zoom = zoomFactor)
+  hexColors = rgb(lasData$R, lasData$G, lasData$B, maxColorValue = max(lasData[,.(R,G,B)]))
+  #rglargs = list()
+  #rglargs$col = hexColors
+  rgl.points(lasData$X, lasData$Y, lasData$Z, color = hexColors)
+  dir.create("animation")
+  for (i in 1:numFrames) {
+    view3d(userMatrix=rotationMatrix(2*pi * i/numFrames, axis[1], axis[2], axis[3]), zoom = zoomFactor)
+    rgl.snapshot(filename=paste("animation/frame-",
+      sprintf("%03d", i), ".png", sep=""))
+  }
+}
+
+save3dMovieRGB = function(las, displayDims = c(2880, 1800), seconds = 12, axis = c(.25, .75, 1)){
+  # saves 3d movie in current working direc. Does not return object. Will overwrite movie.gif and movie.mov if existing
+  lasData = las@data
+  rgl.openWindow(width = displayDims[1], height = displayDims[2])
+  rgl.viewpoint(phi = -90, zoom = .475)
+  rgl.points(lasData$X, lasData$Y, lasData$Z, color = set.colors(lasData$Z, palette = height.colors(unique(lasData$Z))))
+  dir.create("animation")
+  for (i in 1:90) {
+    view3d(userMatrix=rotationMatrix(2*pi * i/90, axis[1], axis[2], axis[3]))
+    rgl.snapshot(filename=paste("animation/frame-",
+      sprintf("%03d", i), ".png", sep=""))
+  }
+}
+
+
+makeMovieFromFrames = function(){
+  system("cd animation")
+  system("convert -delay 5 -loop 0 frame*.png animated.gif")
+}
+
 #–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-#
 #                         MAIN                                                                                                                             #
 #–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-–––––––––––––––––––––-#
@@ -152,15 +203,20 @@ files = c("Rectangular_UTMAZ_Tucson_2011_000564.las", "belowGroundPointsRemoved_
 
 #just SfM:
 setwd(paths[2])
-fullTCloud = readLAS(files[2])
+fullSfMCloud = readLAS(files[2])
 
-denseBigTree = clipToExtents(fullTCloud, bigTree)
+denseBigTree = clipToExtents(fullSfMCloud, bigTree)
 
 play3dTree(denseBigTree)
 
-#plot 3d with RGB color:
+save3dMovieFrames(denseBigTree)
+
+#save 3d frames with RGB color:
+save3dMovieRGBFrames(fullSfMCloud)
 
 
+
+plot(fullSfMCloud, color = hexColors)
 
 
 
@@ -171,7 +227,7 @@ fullTCloud = readLAS("tLidarSRERMesTowerOct2015.las")
 
 denseBigTree = clipToExtents(fullTCloud, bigTree)
 
-save3dMovie(denseBigTree)
+save3dMovie_snapshot(denseBigTree)
 
 
 

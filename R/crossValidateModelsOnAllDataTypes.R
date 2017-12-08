@@ -247,6 +247,12 @@ for(directory in directories){
   datasetString = datasetStrings[i]
   melted[,dataset := datasetString]
 
+  #save column of predicted for each model
+  melted[model == "PV" & datasetString == datasetStrings[i], predicted := results$Mesquite_Allometry_Assumed]
+  melted[model == "ESA" & datasetString == datasetStrings[i], predicted := results$Deterministic_Predictions]
+  melted[model == "RFCF" & datasetString == datasetStrings[i], predicted := results$Model_Predictions]
+  melted[model == "RFCF_ESA" & datasetString == datasetStrings[i], predicted := results$Mean_RF_EcoAllo]
+
   if(i == 1){
     errors = copy(melted)
   } else {
